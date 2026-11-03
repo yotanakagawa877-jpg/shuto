@@ -1,6 +1,6 @@
 // SHUTO service worker: the game shell is fetched network-first (updates show up on the next launch),
 // map packs are cached per release (cache-first) so revisits load fast and work with a weak connection.
-const VERSION = 'v3.8';
+const VERSION = 'v3.9';
 const CACHE = 'shuto-' + VERSION;
 self.addEventListener('install', (e) => self.skipWaiting());
 self.addEventListener('activate', (e) => {
