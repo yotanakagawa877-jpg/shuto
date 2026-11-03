@@ -1,0 +1,213 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html,body{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#07080c}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta charset="utf-8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#07080c">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="SHUTO"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">
+<style>:root{--sat:env(safe-area-inset-top,0px)}html.embed{--sat:max(env(safe-area-inset-top,0px),88px)}html.embed #title{padding-top:112px!important}#title{align-items:flex-start!important}#title>*{margin-top:auto;margin-bottom:auto}</style>
+<script>(function(){var e=false;try{e=window.self!==window.top}catch(x){e=true}if(e)document.documentElement.classList.add('embed');else if('serviceWorker'in navigator&&location.protocol==='https:')addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})})()</script>
+<script>(function(){function z(){if(window.scrollX||window.scrollY||document.documentElement.scrollTop||document.body&&document.body.scrollTop){window.scrollTo(0,0);document.documentElement.scrollTop=0;if(document.body)document.body.scrollTop=0}}function k(){z();setTimeout(function(){z();window.dispatchEvent(new Event('resize'))},350)}addEventListener('scroll',z,{passive:true});addEventListener('orientationchange',k);addEventListener('pageshow',k);addEventListener('load',k);document.addEventListener('visibilitychange',function(){if(!document.hidden)k()})})()</script><title>SHUTO 首都</title><meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Dela+Gothic+One&family=M+PLUS+1p:wght@500;800&display=swap">
+<style>
+:root{--ink:#07080c;--glass:rgba(10,12,18,.62);--glass2:rgba(10,12,18,.86);--rule:rgba(255,255,255,.16);--paper:#f4f0e6;--mute:#a9b0bf;--signal:#ffd23f;--torii:#e5402b;--jr:#80c241;--cash:#6be29a;--siren:#4aa3ff;
+--f-d:'Anton',Impact,'Arial Narrow',sans-serif;--f-j:'Dela Gothic One','Hiragino Sans','Yu Gothic UI','Meiryo',sans-serif;--f-b:'M PLUS 1p','Hiragino Sans','Yu Gothic UI','Meiryo',system-ui,sans-serif;color-scheme:dark}
+html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;font-family:var(--f-b)}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;-webkit-appearance:none}
+button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.hud{position:fixed;inset:0;pointer-events:none;z-index:2}.hud .tap{pointer-events:auto}
+#mm{position:absolute;left:calc(14px + env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));width:190px}
+body.touch #mm{bottom:auto;top:calc(10px + var(--sat));width:132px}
+#mini{width:100%;aspect-ratio:1;border-radius:50%;display:block;background:#1a1f27;box-shadow:0 0 0 3px rgba(0,0,0,.55),0 0 0 4px var(--rule),0 8px 24px rgba(0,0,0,.5)}
+.bar{height:7px;margin-top:7px;background:rgba(0,0,0,.55);border:1px solid var(--rule);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;width:100%;background:var(--cash);transition:width .2s}.bar.car i{background:var(--signal)}
+#tr{position:absolute;right:calc(16px + env(safe-area-inset-right,0px));top:calc(10px + var(--sat));display:flex;flex-direction:column;align-items:flex-end;gap:3px;text-align:right}
+#clock{font:28px/1 var(--f-d);letter-spacing:.05em;text-shadow:0 2px 0 #000;font-variant-numeric:tabular-nums}#clock small{font:13px var(--f-b);color:var(--mute);margin-left:6px}
+#money{font:34px/1 var(--f-d);color:var(--cash);-webkit-text-stroke:1.4px #04220f;text-shadow:0 2px 0 #000;font-variant-numeric:tabular-nums}
+#stars{font:24px/1 var(--f-d);letter-spacing:3px;color:rgba(255,255,255,.16);text-shadow:0 2px 0 rgba(0,0,0,.7)}#stars b{color:var(--signal);font-weight:400}#stars.blink b{animation:blink .5s steps(2) infinite}@keyframes blink{50%{opacity:.25}}
+#obj{position:absolute;left:50%;top:calc(12px + var(--sat));transform:translateX(-50%);background:var(--glass);border:1px solid var(--rule);border-left:3px solid var(--signal);padding:7px 14px;border-radius:4px;font:800 14px/1.45 var(--f-b);max-width:min(560px,60vw);text-align:center}
+#obj small{display:block;color:var(--mute);font-weight:500;font-size:11px;letter-spacing:.1em}
+#area{position:absolute;right:calc(26px + env(safe-area-inset-right,0px));bottom:calc(120px + env(safe-area-inset-bottom,0px));text-align:right;opacity:0;transition:opacity .7s;white-space:nowrap}
+body.touch #area{right:auto;left:calc(152px + env(safe-area-inset-left,0px));transform:none;bottom:auto;top:calc(14px + var(--sat));text-align:left}body.touch #areaJ{font-size:24px!important;-webkit-text-stroke:1.2px #000!important}body.touch #areaE{font-size:10px!important}
+#area.on{opacity:.92}#areaJ{display:block;font:32px/1.05 var(--f-j);color:#fff;-webkit-text-stroke:2px #000;paint-order:stroke}#areaE{display:block;margin-top:4px;font:15px/1 var(--f-d);letter-spacing:.42em;color:var(--signal);text-shadow:0 2px 0 #000}
+#speed{position:absolute;right:calc(26px + env(safe-area-inset-right,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));text-align:right;opacity:0;transition:opacity .3s}
+body.touch #speed{right:auto;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));text-align:center}
+#speed.on{opacity:1}#kmh{font:54px/1 var(--f-d);text-shadow:0 2px 0 #000;font-variant-numeric:tabular-nums}#speed span{display:block;font:12px/1 var(--f-d);letter-spacing:.3em;color:var(--mute)}#speed em{font-style:normal;color:var(--signal)}
+#inst{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:none;gap:18px;background:var(--glass);border:1px solid var(--rule);padding:8px 16px;border-radius:6px;font:12px/1.2 var(--f-d);letter-spacing:.15em;color:var(--mute)}
+#inst.on{display:flex}#inst b{display:block;font:28px/1 var(--f-d);color:#fff;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+#thrBar{width:10px;height:44px;background:rgba(255,255,255,.12);border-radius:3px;position:relative;overflow:hidden}#thrBar i{position:absolute;left:0;right:0;bottom:0;background:var(--signal)}
+#trainP{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:none;background:#05070a;border:1px solid #333;border-left:6px solid var(--jr);padding:10px 18px;border-radius:4px;min-width:280px}
+#trainP.on{display:block}#trainP small{color:#ffb000;font:800 12px var(--f-b)}#trainP b{display:block;font:30px/1.15 var(--f-j)}#trainP span{color:var(--mute);font-size:12px}
+#prompt{position:absolute;left:50%;top:auto;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:70vw;overflow:hidden;text-overflow:ellipsis;background:var(--glass2);border:1px solid var(--rule);padding:8px 16px;border-radius:999px;font:800 14px var(--f-b);opacity:0;transition:opacity .2s;white-space:nowrap}
+#prompt.on{opacity:1}#prompt kbd{display:inline-block;min-width:20px;padding:1px 6px;margin-right:8px;border-radius:4px;background:var(--signal);color:#111;font:800 13px var(--f-b);text-align:center}
+#toast{position:absolute;left:50%;bottom:auto;top:calc(64px + var(--sat));transform:translateX(-50%);font:800 13px/1.45 var(--f-b);background:var(--glass2);border:1px solid var(--rule);padding:10px 18px;border-radius:6px;opacity:0;transition:opacity .35s;text-align:center;max-width:80vw}#toast.on{opacity:1}
+#big{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .5s}#big.on{opacity:1;background:rgba(0,0,0,.28)}
+#bigT{font:min(14vw,110px)/1 var(--f-d);letter-spacing:.06em;-webkit-text-stroke:3px #000;paint-order:stroke}#bigS{font:800 17px/1 var(--f-b);margin-top:12px;text-shadow:0 2px 0 #000}
+#dialog{position:absolute;left:50%;bottom:calc(140px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(640px,88vw);background:var(--glass2);border:1px solid var(--rule);border-radius:8px;padding:14px 18px;display:none;pointer-events:auto}
+#dialog.on{display:block}#dialog small{color:var(--signal);font:800 12px var(--f-b);letter-spacing:.08em}#dialog p{margin:6px 0 0;font:800 17px/1.6 var(--f-b)}#dialog em{float:right;font-style:normal;color:var(--mute);font-size:11px}
+.b{position:absolute;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.16),rgba(12,14,20,.62) 62%);border:1.5px solid rgba(255,255,255,.28);box-shadow:0 4px 14px rgba(0,0,0,.4);font:800 12px/1.1 var(--f-b);display:flex;align-items:center;justify-content:center;text-align:center;text-shadow:0 1px 2px #000}
+.b.on{background:radial-gradient(circle at 35% 30%,rgba(255,210,63,.55),rgba(80,60,0,.7) 70%);border-color:var(--signal)}
+#tb{display:none}body.touch #toast{bottom:auto;top:calc(70px + var(--sat));max-width:56vw;font-size:12px;padding:6px 12px}body.touch #prompt{bottom:auto;top:calc(120px + var(--sat));font-size:12px;padding:6px 12px;max-width:52vw}#toast.low{top:calc(104px + var(--sat))}#bX{font-size:11px!important;letter-spacing:-.02em}.b[hidden]{display:none!important}body.touch #tb{display:block}
+#bMain{right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:88px;height:88px;font-size:14px}
+#bSub{right:calc(114px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));width:66px;height:66px}
+#bAct{right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(120px + env(safe-area-inset-bottom,0px));width:62px;height:62px}
+#bEnter{right:calc(102px + env(safe-area-inset-right,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-color:rgba(255,210,63,.6)}
+#bX{right:calc(92px + env(safe-area-inset-right,0px));bottom:calc(162px + env(safe-area-inset-bottom,0px));width:50px;height:50px;font-size:11px}
+#bUp,#bDown{left:calc(160px + env(safe-area-inset-left,0px));width:54px;height:54px;font-size:11px}#bUp{bottom:calc(96px + env(safe-area-inset-bottom,0px))}#bDown{bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+#bWpn{right:calc(170px + env(safe-area-inset-right,0px));bottom:calc(150px + env(safe-area-inset-bottom,0px));width:52px;height:52px;font-size:11px}
+#phoneBtn{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));top:calc(196px + var(--sat));padding:8px 12px;border-radius:999px;background:var(--glass);border:1px solid var(--rule);font:800 12px var(--f-b);display:none}body.touch #phoneBtn{display:block}
+#camBtn{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));top:calc(158px + var(--sat));padding:8px 12px;border-radius:999px;background:var(--glass);border:1px solid var(--rule);font:800 12px var(--f-b);display:none}body.touch #camBtn{display:block}
+#side .rowc{display:grid;grid-template-columns:72px 1fr 40px;align-items:center;gap:8px;font:800 12px var(--f-b);color:var(--mute)}#side input[type=range]{width:100%;accent-color:var(--signal)}#side .rowc output{color:var(--paper);text-align:right;font-variant-numeric:tabular-nums}
+#pauseBtn{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));top:calc(120px + var(--sat));padding:8px 12px;border-radius:999px;background:var(--glass);border:1px solid var(--rule);font:800 12px var(--f-b);display:none}body.touch #pauseBtn{display:block}
+#stick{position:fixed;width:118px;height:118px;margin:-59px 0 0 -59px;border-radius:50%;border:2px solid rgba(255,255,255,.28);background:rgba(10,12,18,.28);pointer-events:none;z-index:3;display:none}#knob{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;background:rgba(255,255,255,.75)}
+/* overlays */
+.ov{position:fixed;inset:0;z-index:6;display:flex;box-sizing:border-box}.ov[hidden]{display:none!important}
+#title{background:radial-gradient(120% 80% at 75% 110%,rgba(229,64,43,.35),transparent 60%),radial-gradient(90% 70% at 10% -10%,rgba(74,163,255,.25),transparent 60%),linear-gradient(180deg,#0b0e18,#07080c 70%);align-items:center;justify-content:center;padding:24px max(24px,env(safe-area-inset-right,0px)) 24px max(24px,env(safe-area-inset-left,0px));overflow:auto;touch-action:pan-y}
+.tw{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:36px;align-items:center;max-width:1040px;width:100%}
+.logo{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px}.logo h1{margin:0;font:clamp(70px,13vw,170px)/.82 var(--f-d);letter-spacing:.01em}
+.hanko{text-align:center;font:clamp(22px,3.6vw,40px)/1 var(--f-j);color:#fff;background:var(--torii);padding:10px 6px;border-radius:4px;transform:rotate(4deg)}
+.tag{margin:16px 0 0;font:800 clamp(13px,1.6vw,16px)/1.75 var(--f-b);color:var(--mute);max-width:40ch}.tag b{color:var(--paper)}
+.menu{display:flex;flex-direction:column;gap:8px;min-width:0}
+.menu button.big{padding:15px 18px;border-radius:8px;text-align:left;font:24px/1 var(--f-d);letter-spacing:.1em;background:rgba(255,255,255,.05);border:1px solid var(--rule)}
+.menu button.big small{display:block;font:800 12px var(--f-b);letter-spacing:.02em;color:var(--mute);margin-top:6px}
+.menu button.big.pri{background:var(--signal);color:#111;border-color:var(--signal)}.menu button.big.pri small{color:#4a3d00}
+.menu button.big:disabled{opacity:.35}
+.qs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.qs button{padding:9px 4px;border:1px solid var(--rule);border-radius:6px;font:800 12px/1.2 var(--f-b)}.qs button.sel{border-color:var(--signal);background:rgba(255,210,63,.12)}
+.lbl{font:12px var(--f-d);letter-spacing:.3em;color:var(--mute);margin-top:8px}
+#loading{background:#07080c;align-items:center;justify-content:center;flex-direction:column;gap:14px}#loading b{font:44px var(--f-d);letter-spacing:.1em}#lbar{width:min(420px,70vw);height:6px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden}#lbar i{display:block;height:100%;width:0;background:var(--signal);transition:width .2s}#ltxt{color:var(--mute);font:800 13px var(--f-b)}
+#pause{background:rgba(5,6,10,.9);padding:calc(16px + var(--sat)) max(18px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));gap:18px}
+#mapWrap{flex:1;min-width:0;position:relative;border-radius:8px;overflow:hidden;box-shadow:0 0 0 1px var(--rule);background:#14304a;touch-action:none}#bigmap{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+#mapHint{position:absolute;left:10px;bottom:10px;font:800 11px var(--f-b);color:var(--mute);background:var(--glass2);padding:6px 9px;border-radius:4px}
+#side{width:260px;flex:none;display:flex;flex-direction:column;gap:8px;overflow:auto}#side h3{margin:0 0 6px;font:34px/1 var(--f-d);letter-spacing:.06em}
+#side button{text-align:left;padding:11px 12px;border:1px solid var(--rule);border-radius:6px;font:800 13px var(--f-b);background:rgba(255,255,255,.04)}#side button:hover{background:rgba(255,255,255,.09)}
+#side .sec{font:12px var(--f-d);letter-spacing:.25em;color:var(--mute);margin-top:8px}#side .ml{font:500 12px/1.6 var(--f-b);color:var(--mute)}#side .ml b{color:var(--paper)}
+#stmenu{background:rgba(5,6,10,.82);align-items:center;justify-content:center}.panel{background:#0c0f16;border:1px solid var(--rule);border-radius:10px;padding:18px;width:min(560px,92vw);max-height:84vh;overflow:auto}
+.panel h2{margin:0 0 12px;font:28px var(--f-j)}.panel .row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:6px;border:1px solid var(--rule);margin-bottom:8px}.panel .row i{width:10px;align-self:stretch;border-radius:2px}
+.panel .row b{flex:1;font:800 15px var(--f-b)}.panel .row button{padding:8px 10px;border-radius:6px;background:rgba(255,255,255,.08);font:800 12px var(--f-b)}.panel .row button:hover{background:var(--signal);color:#111}
+.panel .close{margin-top:6px;padding:10px 14px;border:1px solid var(--rule);border-radius:6px;font:800 13px var(--f-b)}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font:500 13px/1.5 var(--f-b);color:var(--mute)}.keys b{color:var(--paper)}
+@media (max-width:760px){.tw{grid-template-columns:minmax(0,1fr)}#pause{flex-direction:column}#side{width:auto;max-height:42vh}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* v2.5: keep the centre and the lower centre of the screen clear */
+#toast{left:calc(16px + env(safe-area-inset-left,0px));top:calc(14px + var(--sat));transform:none;text-align:left;max-width:min(380px,34vw);padding:8px 14px;font-size:13px;border-left:3px solid var(--signal)}
+#toast.low{top:calc(14px + var(--sat))}
+#prompt{left:auto;right:calc(26px + env(safe-area-inset-right,0px));bottom:calc(200px + env(safe-area-inset-bottom,0px));transform:none;max-width:min(420px,40vw)}
+#big{justify-content:flex-start;padding-top:calc(78px + var(--sat))}#big.on{background:none}
+#bigT{font-size:min(8vw,60px);-webkit-text-stroke:2px #000}#bigS{font-size:14px;margin-top:6px;background:var(--glass2);padding:4px 12px;border-radius:4px}
+#dialog{bottom:auto;top:calc(70px + var(--sat));width:min(560px,56vw)}#dialog p{font-size:15px}
+#trainP,#inst{left:calc(222px + env(safe-area-inset-left,0px));transform:none;bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+body.touch #toast{left:calc(10px + env(safe-area-inset-left,0px));top:calc(170px + var(--sat));transform:none;max-width:44vw;font-size:11px;padding:5px 10px}
+body.touch #prompt{left:calc(10px + env(safe-area-inset-left,0px));right:auto;top:calc(224px + var(--sat));bottom:auto;transform:none;max-width:44vw}
+body.touch #speed{left:50%;right:auto;transform:translateX(-50%);top:calc(8px + var(--sat));bottom:auto}body.touch #kmh{font-size:34px}
+body.touch #trainP,body.touch #inst{left:50%;transform:translateX(-50%) scale(.82);transform-origin:top center;top:calc(104px + var(--sat));bottom:auto}
+body.touch #obj{top:calc(52px + var(--sat));font-size:12px;padding:5px 10px;max-width:46vw}
+body.touch #dialog{top:calc(120px + var(--sat));width:min(520px,60vw)}body.touch #dialog p{font-size:13px}
+body.touch #big{padding-top:calc(60px + var(--sat))}
+
+/* v2.6: train / ride panel sits above the speedometer, never on top of it */
+body.tpOn #trainP{left:auto;right:calc(26px + env(safe-area-inset-right,0px));bottom:calc(112px + env(safe-area-inset-bottom,0px));top:auto;transform:none;min-width:230px;max-width:340px;padding:8px 14px}
+body.tpOn #trainP b{font-size:24px}body.tpOn #area{display:none}body.tpOn #prompt{bottom:calc(214px + env(safe-area-inset-bottom,0px))}
+body.touch.tpOn #trainP{left:calc(10px + env(safe-area-inset-left,0px));right:auto;top:calc(166px + var(--sat));bottom:auto;transform:scale(.7);transform-origin:top left;min-width:260px}
+body.touch.tpOn #toast{top:calc(240px + var(--sat))}
+body.touch.tpOn #obj{display:none}body.touch.tpOn #prompt{top:calc(286px + var(--sat));bottom:auto}
+
+/* v2.9 touch landscape: minimap in the top-left corner, menu / camera / phone buttons in a row under the clock, clear of the action buttons */
+body.touch #mm{left:calc(4px + env(safe-area-inset-left,0px));top:calc(4px + var(--sat));width:118px}
+body.touch #area{left:calc(130px + env(safe-area-inset-left,0px));top:calc(6px + var(--sat))}
+body.touch #tr{transform:scale(.78);transform-origin:top right;top:calc(4px + var(--sat))}
+body.touch #pauseBtn,body.touch #camBtn,body.touch #phoneBtn{top:calc(80px + var(--sat));padding:6px 11px;font-size:11px}
+body.touch #pauseBtn{right:calc(10px + env(safe-area-inset-right,0px))}body.touch #camBtn{right:calc(84px + env(safe-area-inset-right,0px))}body.touch #phoneBtn{right:calc(146px + env(safe-area-inset-right,0px))}
+body.touch #wpnHud{top:calc(116px + var(--sat))}
+body.touch #toast{top:calc(146px + var(--sat));left:calc(6px + env(safe-area-inset-left,0px))}
+body.touch #prompt{top:calc(196px + var(--sat));left:calc(6px + env(safe-area-inset-left,0px))}
+body.touch.tpOn #trainP{top:calc(144px + var(--sat));left:calc(6px + env(safe-area-inset-left,0px))}body.touch.tpOn #toast{top:calc(214px + var(--sat))}body.touch.tpOn #prompt{top:calc(258px + var(--sat))}
+#diagBox[hidden],#diagLive[hidden]{display:none!important}
+#diagBox{position:fixed;inset:0;z-index:100;background:rgba(5,7,10,.92);display:flex;flex-direction:column;padding:calc(12px + var(--sat)) 14px 14px;gap:8px}
+#diagBox pre{flex:1;overflow:auto;margin:0;font:11px/1.45 ui-monospace,Menlo,monospace;color:#d8e0ea;white-space:pre-wrap;background:#0d1117;border-radius:8px;padding:10px;user-select:text;-webkit-user-select:text}
+#diagBox .row{display:flex;gap:8px}#diagBox button{flex:1;padding:12px;border-radius:8px;border:0;font-weight:800;background:#2a3140;color:#fff}#diagBox button.pri{background:#e5402b}
+#diagLive{position:fixed;left:calc(6px + env(safe-area-inset-left,0px));bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:40;font:10px/1.3 ui-monospace,Menlo,monospace;color:#9fe;background:rgba(0,0,0,.55);padding:4px 6px;border-radius:5px;pointer-events:none;white-space:pre}
+body:not(.touch) #diagLive{bottom:auto;top:calc(150px + var(--sat))}
+body.touch #diagLive{bottom:auto;top:calc(130px + var(--sat))}
+
+/* v3.1: nothing in the middle of the screen — mission text, dialogs, big banners and flight instruments live on the edges */
+#obj{left:auto;right:calc(12px + env(safe-area-inset-right,0px));top:calc(118px + var(--sat));transform:none;text-align:left;max-width:min(320px,30vw)}
+#dialog{left:auto;right:calc(12px + env(safe-area-inset-right,0px));top:calc(196px + var(--sat));bottom:auto;transform:none;width:min(380px,32vw)}
+#dialog p{font-size:14px}
+#big{align-items:flex-start;justify-content:flex-start;padding:calc(120px + var(--sat)) 0 0 calc(18px + env(safe-area-inset-left,0px))}
+#bigT{font-size:min(6vw,44px)}
+#bigS{font-size:13px}
+#inst{flex-direction:row;flex-wrap:wrap;align-items:center;right:auto;left:calc(222px + env(safe-area-inset-left,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:none;max-width:250px;gap:6px 14px}
+#inst #thrBar{order:9;width:100%;height:6px}#inst #thrBar i{top:0;bottom:0;left:0;right:auto;width:0}
+#iMsg{font:800 12px/1.3 var(--f-b);letter-spacing:0;color:var(--signal);max-width:190px;white-space:normal}
+#iMsg:empty{display:none}
+body.touch #obj{right:calc(6px + env(safe-area-inset-right,0px));top:calc(116px + var(--sat));max-width:38vw;font-size:11px}
+body.touch #dialog{right:calc(6px + env(safe-area-inset-right,0px));top:calc(168px + var(--sat));width:min(340px,40vw)}
+body.touch #dialog p{font-size:12px}
+body.touch #big{padding:calc(132px + var(--sat)) 0 0 calc(8px + env(safe-area-inset-left,0px))}
+body.touch #bigT{font-size:28px}
+body.touch #inst{right:auto;max-width:300px;left:calc(6px + env(safe-area-inset-left,0px));top:calc(128px + var(--sat));bottom:auto;transform:scale(.72);transform-origin:top left;gap:12px;padding:6px 10px}
+body.touch.flyOn #toast{top:calc(228px + var(--sat))}
+body.touch.flyOn #prompt{top:calc(272px + var(--sat))}
+</style>
+<canvas id="gl"></canvas>
+<div class="hud" id="hud" hidden>
+  <div id="mm"><canvas id="mini" width="380" height="380"></canvas><div class="bar"><i id="hpBar"></i></div><div class="bar car" id="carBarW" hidden><i id="carBar"></i></div></div>
+  <div id="tr"><div id="clock">16:00</div><div id="money">¥5,000</div><div id="stars"><span>★★★★★</span></div></div>
+  <div id="obj" hidden></div>
+  <div id="area"><b id="areaJ"></b><span id="areaE"></span></div>
+  <div id="speed"><b id="kmh">0</b><span>KM/H <em id="gear"></em></span></div>
+  <div id="inst"><div id="thrBar"><i id="thrI"></i></div><div>ALT<b id="iAlt">0</b></div><div>SPD<b id="iSpd">0</b></div><div>V/S<b id="iVs">0</b></div><div>HDG<b id="iHdg">0</b></div><div id="iMsg"></div></div>
+  <div id="trainP"><small id="tpNext">次は</small><b id="tpSt"></b><span id="tpLine"></span></div>
+  <div id="prompt"></div><div id="toast"></div>
+  <div id="dialog" class="tap"><small id="dWho"></small><em>クリック / F で次へ</em><p id="dTxt"></p></div>
+  <div id="big"><div id="bigT"></div><div id="bigS"></div></div>
+  <button id="pauseBtn" class="tap">メニュー</button><button id="camBtn" class="tap">視点</button><button id="phoneBtn" class="tap">スマホ</button>
+  <div id="tb"><button class="b tap" id="bMain">ダッシュ</button><button class="b tap" id="bSub">ジャンプ</button><button class="b tap" id="bAct">パンチ</button><button class="b tap" id="bEnter">乗る</button><button class="b tap" id="bX">仕事</button><button class="b tap" id="bUp" hidden>上昇</button><button class="b tap" id="bDown" hidden>下降</button><button class="b tap" id="bWpn" hidden>武器</button></div>
+</div>
+<div id="stick"><div id="knob"></div></div>
+<div class="ov" id="loading" hidden><b>SHUTO</b><div id="lbar"><i></i></div><div id="ltxt">東京を読み込み中…</div></div>
+<div class="ov" id="title">
+  <div class="tw">
+    <div><div class="logo"><h1>SHUTO</h1><div class="hanko">首<br>都</div></div>
+      <p class="tag"><b>実在の東京を走る、飛ぶ、乗る、撃つ。</b>大宮から鎌倉・大船、町田から幕張まで。新幹線・特急・快速・急行と直通運転、JR・私鉄・地下鉄80路線以上（電車の運転も可能）、路線バス、タクシー、水上バス。バイクや船、武器屋、改造ショップ、物件購入、スマホ、ラジオ、展望台、競馬・パチンコ、大学・学校、ライブ会場や博物館、銭湯や居酒屋、街の神社や商店街も。<small style="display:block;margin-top:6px;color:#8a93a3">v3.6 ・ 地図データ © OpenStreetMap contributors</small></p></div>
+    <div class="menu">
+      <button class="big pri" id="tContinue">CONTINUE<small>つづきから</small></button>
+      <button class="big" id="tNew">NEW GAME<small>はじめから（渋谷から）</small></button>
+      <div class="lbl">GRAPHICS</div>
+      <button class="big" id="tDiag" hidden style="border-color:#e5402b">前回、途中で終了しました<small>診断レポートを見る</small></button>
+      <div class="qs" id="qs"><button data-q="low">軽量</button><button data-q="mid">標準</button><button data-q="high">高画質</button><button data-q="ultra">最高</button></div>
+      <div class="lbl">CONTROLS</div>
+      <div class="keys" id="keys"><b>WASD</b><span>移動・運転（Shift ダッシュ）</span><b>マウス</b><span>カメラ（クリックで固定）</span><b>F</b><span>乗る・降りる・入る・ミッション開始</span><b>Space</b><span>ジャンプ／ハンドブレーキ</span><b>クリック / E</b><span>パンチ・撮影</span><b>M / Esc</b><span>地図・メニュー</span><b>J</b><span>仕事（車に乗って）</span><b>T</b><span>タクシーを呼ぶ（バス停では F で路線バス）</span><b>V / ホイール</b><span>視点切替（近い・標準・遠い・一人称）／ズーム（＋ − キーでも）</span><b>飛行</b><span>Shift/Ctrl 推力・W/S 機首・A/D 旋回・Q/E ヨー</span><b>武器</b><span>Tab ウェポンホイール・1〜7 で選択・右クリックで構え・左クリックで攻撃・R リロード</span><b>F / N（乗車中）</b><span>電車・バスで次の駅／停留所へスキップ（停車中は F で降車）</span><b>L（電車）／F（車・飛行機）</b><span>走行中に飛び降りる（上空ではスカイダイブ、ジャンプでパラシュート）</span><b>G（乗車中）</b><span>電車・バスで降りる駅／停留所を選ぶ・選んだ後は目的地へすぐ到着</span><b>ミニマップ</b><span>クリック／タップで地図を開く</span><b>P</b><span>スマホ（地図・タクシー・メカニック・不動産・ラジオ・チート）</span><b>R（車内）</b><span>ラジオ局を切り替え</span></div>
+    </div>
+  </div>
+</div>
+<div id="diagBox" hidden><pre id="diagPre"></pre><div class="row"><button class="pri" id="diagCopy">コピー</button><button id="diagClear">消去</button><button id="diagClose">閉じる</button></div></div>
+<div id="diagLive" hidden></div>
+<div class="ov" id="pause" hidden>
+  <div id="mapWrap"><canvas id="bigmap"></canvas><div id="mapHint">ドラッグで移動・ホイール/ピンチで拡大・クリックで目的地</div></div>
+  <div id="side" class="scroll">
+    <h3>TOKYO</h3>
+    <button id="pResume">ゲームに戻る</button>
+    <button id="pClear">目的地を消す</button>
+    <button id="pJob">仕事を探す（車で）</button>
+    <button id="pSave">セーブ</button>
+    <button id="pSound">サウンド: ON</button>
+    <button id="pDiag">診断表示: OFF</button>
+    <button id="pMusic">カーラジオ: ON</button>
+    <button id="pWeather">天気: 自動</button>
+    <button id="pTime">時間を進める +3h</button>
+    <button id="pRespawn">近くの道路に戻る</button>
+    <button id="pTitle">タイトルへ</button>
+    <div class="sec">CAMERA</div>
+    <button id="pCam">視点: 標準</button>
+    <div class="rowc"><label for="pSens">感度</label><input type="range" id="pSens" min="0.3" max="2.5" step="0.05"><output id="oSens"></output></div>
+    <div class="rowc"><label for="pFov">視野角</label><input type="range" id="pFov" min="50" max="90" step="1"><output id="oFov"></output></div>
+    <div class="rowc"><label for="pZoom">距離</label><input type="range" id="pZoom" min="0.35" max="3.2" step="0.05"><output id="oZoom"></output></div>
+    <button id="pInv">上下反転: OFF</button>
+    <button id="pAuto">カメラ自動追従: ON</button>
+    <div class="sec">MISSIONS</div><div class="ml" id="pMissions"></div>
+    <div class="sec">STATS</div><div class="ml" id="pStats"></div>
+  </div>
+</div>
+<div class="ov" id="stmenu" hidden><div class="panel scroll"><h2 id="stName"></h2><div id="stLines"></div><button class="close" id="stClose">改札を出る</button></div></div>
+<script src="game.js"></script>
+
+
+</body></html>
