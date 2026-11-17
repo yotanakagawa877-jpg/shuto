@@ -164,3 +164,10 @@ v4Prompt / v4Talk / slotKey / getSlot and uses V4, COASTERS, CHAPTERS, ACH).
   fly, heli, wanted5, map_edges, spam, idle, streamdrive, saveload, v4_rides, v4_bet, v4_tour, v4_talk_dex, v4_slots.
 - Pending proposals (performance, need approval): AI traffic on small streets; baking bus routes (start-up "transit"
   is ~35 s headless on the extended map).
+
+### v4.0 final notes
+- Published to gh-pages (normal commits). Final suite (test/play/run.mjs, all scenarios, 844x390 touch, low): 0 console errors, 0 freezes, all missions pass.
+- Late fixes: taxi pickup when the player stands in the road, snow particles in camera space (screen-size flakes), denser fog, racehorse models, race result on the 240 s limit, big caption / toast timing tied to the caption.
+- Headless Chrome (SwiftShader) runs at ~2 fps, so captions/toasts and real-time waits look long in tests; judge timing on a phone.
+- New probes: taxi_probe, race_probe, weather_probe, pause_probe.
+- Open proposals needing approval (performance): bake bus routes, AI traffic on narrow streets, ambient scenery across the whole map.

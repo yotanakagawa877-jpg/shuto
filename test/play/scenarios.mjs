@@ -355,14 +355,16 @@ SCEN.v4_talk_dex = async (ctx) => {
 };
 SCEN.v4_slots = async (ctx) => {
   await ctx.ev(async () => { const g = __G; await T.tp(-2900, 1300); g.G.money = 777777; });
-  await ctx.page.tap('#pauseBtn'); await W8(ctx, 600); await ctx.page.tap('#pSave'); await W8(ctx, 600);
+  await ctx.page.tap('#pauseBtn'); await ctx.page.waitForSelector('#pSave', { state: 'visible', timeout: 15000 }); await W8(ctx, 400);
+  await ctx.page.tap('#pSave'); await ctx.page.waitForSelector('#v4ov .row button', { state: 'visible', timeout: 15000 }).catch(() => {}); await W8(ctx, 400);
   const rows = await ctx.page.$$eval('#v4ov .row', (rs) => rs.map((r) => r.textContent.trim().slice(0, 60)));
   await ctx.page.tap('#v4ov .row:nth-child(2) button'); await W8(ctx, 600);
   await ctx.page.tap('#pTitle'); await W8(ctx, 1000);
+  await ctx.ev(() => { __G.G.money = 1; }); // must come back as 777777 from the save
   await ctx.page.tap('#tContinue'); await W8(ctx, 800);
-  const crow = await ctx.page.$$eval('#v4ov .row', (rs) => rs.map((r) => r.textContent.trim().slice(0, 60))).catch(() => []);
-  await ctx.ev(() => { __G.G.money = 1; });
-  if (crow.length) await ctx.page.tap('#v4ov .row:nth-child(2) button');
+  // with a single save, つづきから goes straight in (no list); the hidden list of an older menu must not count
+  const crow = await ctx.page.$$eval('#v4ov .row', (rs) => rs.filter((r) => r.offsetParent).map((r) => r.textContent.trim().slice(0, 60))).catch(() => []);
+  if (crow.length) await ctx.page.locator('#v4ov .row').nth(1).locator('button').first().tap({ timeout: 10000 }).catch(() => {});
   await W8(ctx, 3000);
   const got = await ctx.ev(() => ({ money: __G.G.money, slot: __G.X.getSlot(), started: __G.G.started }));
   return { rows, crow, got };
@@ -425,5 +427,17 @@ SCEN.weather_probe = async (ctx) => {
     await W8(ctx, 3000); await ctx.shot('weather_' + (label === '雪' ? 'snow' : 'fog'));
     out.push(await st());
   }
+  return out;
+};
+SCEN.pause_probe = async (ctx) => {
+  const st = () => ctx.ev(() => ({ mode: __G.P.mode, paused: __G.G.paused, dlg: __G.HUD.dialogOpen(), v4ov: !!document.querySelector('#v4ov.on, #v4ov:not(.off)') && getComputedStyle(document.getElementById('v4ov') || document.body).display }));
+  const out = [await st()];
+  await ctx.ev(async () => { await T.tp(-2900, 1300); });
+  out.push(await st());
+  await ctx.page.tap('#pauseBtn').catch((e) => out.push('pauseBtn ' + e.message.slice(0, 60))); await W8(ctx, 800);
+  out.push(await st(), await ctx.page.isVisible('#pause'), await ctx.page.isVisible('#pSave'));
+  await ctx.page.tap('#pSave', { timeout: 5000 }).catch((e) => out.push('pSave ' + e.message.slice(0, 60))); await W8(ctx, 800);
+  out.push(await ctx.page.isVisible('#v4ov'), await ctx.page.$$eval('#v4ov .row', (rs) => rs.map((r) => [r.textContent.trim().slice(0, 20), !!r.offsetParent])));
+  await ctx.shot('pause_probe');
   return out;
 };
