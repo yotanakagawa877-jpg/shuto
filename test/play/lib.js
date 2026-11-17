@@ -45,7 +45,7 @@ window.T = (() => {
         const gy = T.gy(c.x, c.z, c.y + 2);
         if (fin(gy) && c.y < gy - 2) { T._cu = (T._cu || 0) + 1; if (T._cu === 30) T.note('car-below-ground', `y ${c.y.toFixed(1)} ground ${gy.toFixed(1)}`); } else T._cu = 0;
       }
-      if (P.y < -60 || P.y > 3000) { if (!T._oob) T.note('y-out-of-range', P.y.toFixed(1)); T._oob = 1; }
+      if (!P.interior && !P.air && !P.sky && (P.y < -60 || P.y > 3000)) { if (!T._oob) T.note('y-out-of-range', P.y.toFixed(1)); T._oob = 1; }
     },
     startM(m) {
       const g = __G, P = g.P; P.x = m.start[0]; P.z = m.start[1];

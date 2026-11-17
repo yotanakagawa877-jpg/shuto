@@ -22804,9 +22804,11 @@ function r5() {
     // v4.0: search further out (racecourses, parks) and never start on a tile street, an elevated deck or a motorway
     const px = player_P.mode === 'car' && player_P.car ? player_P.car.x : player_P.x,
       pz = player_P.mode === 'car' && player_P.car ? player_P.car.z : player_P.z;
-    for (let rr = 120; rr <= 900 && !e; rr += 260) {
+    // (the getaway car must start well inside the 700 m "lost" distance)
+    for (let rr = 120; rr <= 480 && !e; rr += 180) {
       roadsNear(px + 120, pz + 60, rr, t);
-      e = t.find((i) => !i.e.elev && !i.e.tile && i.e.kind === 'A') || t.find((i) => !i.e.elev && !i.e.tile && i.e.kind !== 'X' && i.e.kind !== 'R');
+      const ok = t.filter((i) => !i.e.elev && !i.e.tile && i.e.kind !== 'X' && i.e.kind !== 'R' && Math.hypot(i.x - px, i.z - pz) < 520);
+      e = ok.find((i) => i.e.kind === 'A') || ok[0] || null;
     }
     if (e) {
       let i = spawnAICar(e.x, e.z, 'sport');
@@ -24109,6 +24111,8 @@ function R6() {
 var A1 = 0;
 function big(n, t, e) {
   ((H.bigT.textContent = n), (H.bigS.textContent = t || ''), (H.bigT.style.color = e || '#fff'), H.big.classList.add('on'), (A1 = 3.6));
+  // v4.0: while the big caption shows, toasts move below it (they shared the same place on touch screens)
+  (document.body.classList.add('bigOn'), clearTimeout(big.t), (big.t = setTimeout(() => document.body.classList.remove('bigOn'), 4200)));
 }
 var oh = {
   lines: [],

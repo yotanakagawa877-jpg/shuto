@@ -769,7 +769,14 @@ function v4FixMissions() {
   const cur = MS.cur,
     s = cur && cur.steps[MS.step];
   if (s && !s.fixed && s.to && typeof s.to[0] === 'number' && (s.t === 'go' || s.t === 'land') && !s.plane && Math.hypot(s.to[0] - px, s.to[1] - pz) < 900) {
-    const q = v4SafeSpot(s.to, !1);
+    let q = v4SafeSpot(s.to, !!s.vehicle);
+    // a target for a vehicle must be reachable on a ground road (some old points sit 60 m off the real crossing)
+    if (q && s.vehicle && s.t === 'go') {
+      const a = [];
+      roadsNear(q[0], q[1], 200, a);
+      const r = a.filter((u) => !u.e.elev && u.e.kind !== 'X' && u.e.kind !== 'R').sort((u, v) => u.d - v.d)[0];
+      r && r.d > s.r * 0.7 && (q = [r.x, r.z]);
+    }
     q && ((s.fixed = !0), q !== s.to && ((s.to = q), (MS.target = q), updRoute()));
   }
 }

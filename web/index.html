@@ -4,6 +4,9 @@ body.touch.tpOn #bUp{left:auto;right:calc(186px + env(safe-area-inset-right,0px)
 body.touch.tpOn #bDown{left:auto;right:calc(170px + env(safe-area-inset-right,0px));bottom:calc(100px + env(safe-area-inset-bottom,0px));border-color:rgba(255,90,70,.7)}
 body.touch.tpOn #toast{max-width:34vw}
 body.tpOn #prompt{display:none}
+/* v4.0: toasts step below the MISSION PASSED / FAILED caption */
+body.touch.bigOn #toast{top:calc(206px + var(--sat))}
+body.bigOn #toast{top:calc(200px + var(--sat))}
 </style></head><body>
 <meta charset="utf-8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#07080c">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="SHUTO"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">
