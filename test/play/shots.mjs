@@ -23,7 +23,7 @@ await page.evaluate(async () => { const g = __G, rc = g.W.fun.race.find((r) => /
 await W8(1500); await shot('03_bet_menu');
 await page.locator('#v4ov .v4l .row').nth(2).locator('button').first().tap().catch((e) => console.log('bet tap', e.message.slice(0, 80)));
 console.log('race', await page.evaluate(() => !!__G.X.V4.race));
-await page.evaluate(() => { const g = __G, r = g.X.V4.race; T.sim(14); if (r) { const h = r.horses[0].h.position; const y = g.G.cam.yaw; g.P.x = h.x - Math.sin(y) * 14; g.P.z = h.z - Math.cos(y) * 14; T.sim(0.5); r.horses.forEach((o) => (o.s = 0, o.v = 0)); // hold the field still for the (slow) headless frame } });
+await page.evaluate(() => { const g = __G, r = g.X.V4.race; T.sim(14); if (r) { const h = r.horses[0].h.position; const y = g.G.cam.yaw; g.P.x = h.x - Math.sin(y) * 14; g.P.z = h.z - Math.cos(y) * 14; T.sim(0.5); r.horses.forEach((o) => (o.s = 0, o.v = 0)); /* hold the field still for the slow headless frame */ } });
 await W8(9000); await shot('04_race');
 await page.evaluate(() => { let k = 0; while (__G.X.V4.race && k++ < 200) T.sim(1); });
 // Yokohama chapter mission start (dialog)
@@ -43,10 +43,10 @@ async function setWeather(label) {
   await page.tap('#pResume'); await W8(500);
 }
 await setWeather('雪');
-await page.evaluate(async () => { const g = __G; T.sim(15); g.R.tod = 10; const L = g.W.landmarks.tsurugaoka; await T.tp(L.x + 30, L.z + 120); T.sim(3); g.G.cam.yaw = 0; });
+await page.evaluate(async () => { const g = __G; g.R.tod = 10; const L = g.W.landmarks.tsurugaoka; await T.tp(L.x + 30, L.z + 120); T.sim(15); g.G.cam.yaw = 0; });
 await W8(9000); await shot('08_snow_kamakura');
 await setWeather('霧');
-await page.evaluate(async () => { const g = __G; T.sim(15); const S = T.st('大宮'); await T.tp(S.x + 40, S.z + 40); T.sim(3); });
+await page.evaluate(async () => { const S = T.st('大宮'); await T.tp(S.x + 40, S.z + 40); T.sim(15); });
 await W8(9000); await shot('09_fog_omiya');
 await browser.close();
 console.log('shots done');

@@ -527,7 +527,8 @@ function v4RaceTick(dt) {
   });
   if (r.fin.length && !r.called) ((r.called = 1), toast(`1着 ${r.fin[0] + 1}番 ${r.names[r.fin[0]]}！`));
   if (r.fin.length === r.horses.length || r.t > 240) {
-    const win = r.fin[0],
+    // on the time limit with nobody past the post, the horse furthest along wins
+    const win = r.fin.length ? r.fin[0] : r.horses.reduce((b, h, i) => (h.u > r.horses[b].u ? i : b), 0),
       s = v4Stats();
     if (win === r.pick) {
       const pay = Math.round(r.amt * r.odds[win]);
