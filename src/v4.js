@@ -359,6 +359,7 @@ function v4RideTick(dt) {
   if (!r) return;
   P.mode = 'foot';
   P.vy = 0;
+  P.onGround = !1; // seated on a ride, not standing on the ground
   P.speed = 0;
   P.walkAmp = 0;
   if (r.type === 'wheel') {

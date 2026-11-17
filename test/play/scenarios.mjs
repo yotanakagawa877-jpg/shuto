@@ -122,6 +122,8 @@ export const SCEN = {
     const r = await ctx.ev(async () => {
       const g = __G, P = g.P;
       if (P.mode !== 'train') { const S = T.st('新宿'); const e = S.entrances[0]; if (P.interior) g.doAction('exit'); P.x = e.x; P.z = e.z; const rail = g.W.rails.find((r) => r.code === 'JY'); if (!g.PL.boardTrain(rail, 1)) return 'board failed'; T.note('harness', 'station UI did not board; used boardTrain'); }
+      for (let k = 0; k < 20 && !P.train; k++) T.sim(0.5);
+      if (!P.train) return 'no train after boarding';
       const a = T.snap(); T.sim(40); const b = T.snap();
       const n = g.TR.skipToNext(P.train); T.sim(2); const c = T.snap();
       return { a, b, next: n && n.ja, c };

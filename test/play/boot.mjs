@@ -6,7 +6,7 @@ export async function boot({ url = process.env.URL || 'http://localhost:8780/ind
   let page = pg0;
   const log = { errors: [], warns: [], logs: [] };
   if (!page) {
-    const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 });
+    const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true, deviceScaleFactor: +process.env.DSF || 1 });
     page = await ctx.newPage();
     page.on('console', (m) => { const t = m.text(); if (m.type() === 'error' && !/Failed to load resource/.test(t)) log.errors.push(`[${log.tag || ''}] ${t}`.slice(0, 600)); else if (/^LOG /.test(t)) log.logs.push(t.slice(0, 200)); });
     page.on('pageerror', (e) => log.errors.push(`[${log.tag || ''}] PAGEERROR ${e.message} ${(e.stack || '').split('\n').slice(1, 4).join(' | ')}`.slice(0, 900)));
