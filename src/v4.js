@@ -171,16 +171,16 @@ function v4SaveMenu() {
 
 // ---------- encyclopedia (図鑑)
 var LM_JA = {
-  tokyoTower: '東京タワー', skytree: 'スカイツリー', tokyoStation: '東京駅丸の内駅舎', scramble: '渋谷スクランブル交差点', shibuya109: 'シブヤ109', tocho: '東京都庁',
-  docomo: 'ドコモタワー', cocoon: 'コクーンタワー', roppongiHills: '六本木ヒルズ', azabudai: '麻布台ヒルズ', sensoji: '浅草寺', kaminarimon: '雷門', rainbowBridge: 'レインボーブリッジ',
-  fujiTV: '台場テレビ球体', bigSight: '東京ビッグサイト', kabukichoGate: '歌舞伎町一番街', diet: '国会議事堂', meijiShrine: '明治神宮', sunshine60: 'サンシャイン60', tokyoDome: '東京ドーム',
-  toranomonHills: '虎ノ門ヒルズ', palaceKeep: '皇居 天守台', kachidokiBridge: '勝鬨橋', gate: '東京駅前広場', heliport: '東京ヘリポート', nihonbashi: '日本橋', ameyoko: 'アメ横',
-  landmarkTower: 'ランドマークタワー', queensSquare: 'クイーンズスクエア', cosmoClock: 'コスモクロック21', redBrick: '赤レンガ倉庫', osanbashi: '大さん橋', yamashitaPark: '山下公園',
-  marineTower: 'マリンタワー', chinatown: '横浜中華街', yokohamaStadium: '横浜スタジアム', bayBridge: '横浜ベイブリッジ', tsubasaBridge: 'つばさ橋', kawasakiDaishi: '川崎大師',
+  tokyoTower: '東京タワー', skytree: 'スカイツリー', tokyoStation: '東京駅丸の内駅舎', scramble: '渋谷スクランブル交差点', shibuya109: 'シブヤ108', tocho: '東京都庁',
+  docomo: '代々木の時計塔ビル', cocoon: 'まゆ型タワー', roppongiHills: '六本木ハイツタワー', azabudai: '麻布台ハイツ', sensoji: '浅草寺', kaminarimon: '雷門', rainbowBridge: 'レインボーブリッジ',
+  fujiTV: '台場テレビ球体', bigSight: '東京ビッグサイト', kabukichoGate: '歌舞伎町一番街', diet: '国会議事堂', meijiShrine: '明治神宮', sunshine60: '池袋サンライズ60', tokyoDome: '後楽園ドーム',
+  toranomonHills: '虎ノ門ハイツ', palaceKeep: '皇居 天守台', kachidokiBridge: '勝鬨橋', gate: '東京駅前広場', heliport: '東京ヘリポート', nihonbashi: '日本橋', ameyoko: 'アメ横',
+  landmarkTower: 'みなとみらいタワー', queensSquare: 'クイーンズプラザ横浜', cosmoClock: 'みなとみらい大観覧車', redBrick: '赤レンガ倉庫', osanbashi: '大さん橋', yamashitaPark: '山下公園',
+  marineTower: 'マリンタワー', chinatown: '横浜中華街', yokohamaStadium: '横浜公園スタジアム', bayBridge: '横浜ベイブリッジ', tsubasaBridge: 'つばさ橋', kawasakiDaishi: '川崎大師',
   yokohamaStation: '横浜駅', musashiKosugi: '武蔵小杉',
   omiyaHikawa: '大宮 氷川神社', railwayMuseum: '鉄道博物館', superArena: 'さいたまスーパーアリーナ', kawagoeBell: '川越 時の鐘', urawaRace: '浦和競馬場',
   tsurugaoka: '鶴岡八幡宮', daibutsu: '鎌倉大仏', enoshima: '江の島', seaCandle: '江の島シーキャンドル', chibaPortTower: '千葉ポートタワー', makuhariMesse: '幕張メッセ',
-  marineStadium: 'ZOZOマリン風スタジアム', funabashiRace: '船橋競馬場', hakkeijima: '八景島', mikasa: '記念艦 三笠', hachiojiSt: '八王子駅', kisarazuAF: '木更津飛行場',
+  marineStadium: '幕張マリン球場', funabashiRace: '船橋競馬場', hakkeijima: '八景島', mikasa: '記念艦 三笠', hachiojiSt: '八王子駅', kisarazuAF: '木更津飛行場',
 };
 // v4.0 landmarks of the new chapters (real places; added to the landmark table before the world is built)
 Object.assign(Mf, {
@@ -474,7 +474,7 @@ function v4PlaceBet(rc, names, str, odds, pick, amt) {
       return { h, u: 0, v: 0, s: str[i] };
     });
   R.scene.add(grp);
-  const len = Math.min(L * 1.1, 2000);
+  const len = Math.min(L * 0.95, 1200);
   V4.race = { rc, names, odds, pick, amt, horses, grp, at, L, len, t: 0, fin: [] };
   toast(`${pick + 1}番 ${names[pick]} の単勝を¥${amt.toLocaleString('ja-JP')}購入。まもなく発走！`);
   gt.melody && gt.melody();
@@ -571,16 +571,16 @@ var CHAPTERS = { yokohama: '横浜編', chiba: '湾岸千葉編', omiya: '大宮
 MISSIONS.push(
   // ---- 横浜編
   { id: 'y1', ch: 'yokohama', title: 'ハマの物件めぐり', who: 'saki', start: pe4(35.4658, 139.6232), intro: ['横浜にも物件があるの。', 'みなとみらいの見どころを写真に撮ってきて。お客さんに見せたいの。'],
-    steps: [{ t: 'photo', at: 'cosmoClock', r: 260, text: 'コスモクロック21を撮影（パンチボタン）' }, { t: 'photo', at: 'redBrick', r: 200, text: '赤レンガ倉庫を撮影' }, { t: 'go', to: pe4(35.4466, 139.6508), r: 30, foot: !0, text: '山下公園へ歩いて行く' }], reward: 8e3 },
+    steps: [{ t: 'photo', at: 'cosmoClock', r: 260, text: 'みなとみらい大観覧車を撮影（パンチボタン）' }, { t: 'photo', at: 'redBrick', r: 200, text: '赤レンガ倉庫を撮影' }, { t: 'go', to: pe4(35.4456, 139.651), r: 40, foot: !0, text: '山下公園へ歩いて行く' }], reward: 8e3 },
   { id: 'y2', ch: 'yokohama', title: '中華街デリバリー', who: 'hana', start: pe4(35.4428, 139.6462), intro: ['中華街の名店から、熱々の肉まんの配達だ！', '冷めないうちに、港の見える丘と横浜スタジアムへ。'],
     steps: [{ t: 'spawn', car: 'delivery', at: pe4(35.443, 139.6452), text: '配達バンに乗る' }, { t: 'enter', kind: 'car', text: '配達バンに乗る' },
-      { t: 'go', to: pe4(35.4385, 139.6525), r: 25, vehicle: !0, time: 150, text: '港の見える丘公園へ配達' }, { t: 'go', to: pe4(35.4434, 139.6405), r: 30, vehicle: !0, time: 150, text: '横浜スタジアムへ配達' }], reward: 9e3 },
+      { t: 'go', to: pe4(35.4385, 139.6525), r: 25, vehicle: !0, time: 150, text: '港の見える丘公園へ配達' }, { t: 'go', to: pe4(35.4434, 139.6405), r: 30, vehicle: !0, time: 150, text: '横浜公園スタジアムへ配達' }], reward: 9e3 },
   { id: 'y3', ch: 'yokohama', title: 'ベイブリッジ疾走', who: 'ryo', start: pe4(35.4545, 139.6385), intro: ['よう、横浜まで来たか。', 'ベイブリッジを渡って大黒ふ頭まで。湾岸の流儀ってやつを見せてやる。'],
     steps: [{ t: 'spawn', car: 'sport', at: pe4(35.4547, 139.6392), text: 'スポーツカーに乗る' }, { t: 'enter', kind: 'car', text: 'スポーツカーに乗る' },
       { t: 'go', to: pe4(35.4628, 139.6833), r: 60, vehicle: !0, time: 240, text: 'ベイブリッジを渡って大黒ふ頭へ' }, { t: 'heat', stars: 2, text: '派手に走って手配度★2' }, { t: 'evade', text: '警察を振り切る' }], reward: 14e3 },
   { id: 'y4', ch: 'yokohama', title: 'シーパラの絶叫', who: 'saki', start: pe4(35.3405, 139.6402), intro: ['取材で八景島に来たの。', 'ジェットコースターの感想、あなたが体験して教えて！'],
     steps: [{ t: 'coaster', text: 'ジェットコースターに乗る（乗り場で「乗る」）' }], reward: 6e3 },
-  { id: 'y5', ch: 'yokohama', title: 'みなとみらい上空', who: 'pilot', start: pe4(35.55, 139.784), intro: ['機長、今日は横浜方面だ。', 'つばさ橋、ベイブリッジ、ランドマークタワーの上空を回って羽田に戻ってくれ。'],
+  { id: 'y5', ch: 'yokohama', title: 'みなとみらい上空', who: 'pilot', start: pe4(35.55, 139.784), intro: ['機長、今日は横浜方面だ。', 'つばさ橋、ベイブリッジ、みなとみらいタワーの上空を回って羽田に戻ってくれ。'],
     steps: [{ t: 'enter', kind: 'plane', text: '駐機中の飛行機に乗る' }, { t: 'rings', pts: [['tsubasaBridge', 300], ['bayBridge', 320], ['landmarkTower', 520]], text: '横浜上空のリングを通過' },
       { t: 'land', to: [HND.A.x, HND.A.z], r: 1500, plane: !0, text: '羽田に着陸して停止' }], reward: 3e4 },
   // ---- 湾岸千葉編
@@ -592,7 +592,7 @@ MISSIONS.push(
   { id: 'c3', ch: 'chiba', title: '船橋の大一番', who: 'hana', start: pe4(35.6806, 139.9979), intro: ['社長の代わりに馬券を頼まれちまった。', '船橋競馬場で一勝負してきてくれ。当たったら山分けだ！'],
     steps: [{ t: 'bet', course: '船橋', text: '船橋競馬場の大型ビジョン前で馬券を買い、レースを見届ける' }], reward: 5e3 },
   { id: 'c4', ch: 'chiba', title: 'ポートタワーへの追跡', who: 'inspector', start: pe4(35.6153, 140.1132), intro: ['千葉駅前で盗難車を見つけた。', '港の方へ逃げるはずだ。追え！'],
-    steps: [{ t: 'enter', kind: 'car', text: '車に乗る（近くの車を奪ってもいい）' }, { t: 'chase', text: '盗難車を止める' }, { t: 'go', to: pe4(35.6003, 140.0948), r: 60, vehicle: !0, text: '千葉ポートタワーで合流' }], reward: 15e3 },
+    steps: [{ t: 'enter', kind: 'car', text: '車に乗る（近くの車を奪ってもいい）' }, { t: 'chase', text: '盗難車を止める' }, { t: 'go', to: pe4(35.6008, 140.0965), r: 70, vehicle: !0, text: '千葉ポートタワーで合流' }], reward: 15e3 },
   { id: 'c5', ch: 'chiba', title: '房総の空', who: 'pilot', start: pe4(35.3975, 139.9095), intro: ['木更津へようこそ。', 'ヘリで湾岸をぐるっと回って帰ってきてくれ。'],
     steps: [{ t: 'enter', kind: 'heli', text: 'ヘリに乗る' }, { t: 'rings', pts: [['chibaPortTower', 260], ['makuhariMesse', 260], ['funabashiRace', 220]], text: '湾岸のリングを通過' },
       { t: 'land', to: pe4(35.3975, 139.9095), r: 80, text: '木更津に着陸' }], reward: 25e3 },
@@ -607,14 +607,14 @@ MISSIONS.push(
   { id: 'o4', ch: 'omiya', title: 'アリーナ前の逃走', who: 'ryo', start: pe4(35.8935, 139.6315), intro: ['さいたま新都心で警察に目をつけられた。', '派手にやって、きっちり撒いてこい。'],
     steps: [{ t: 'enter', kind: 'car', text: '車に乗る' }, { t: 'heat', stars: 3, text: '手配度★3まで上げる' }, { t: 'evade', text: '警察を振り切る' }], reward: 15e3 },
   { id: 'o5', ch: 'omiya', title: '浦和の一番人気', who: 'inspector', start: pe4(35.8545, 139.6735), intro: ['浦和競馬場で怪しい男が馬券を買っているらしい。', '客のふりをして一レース見てこい。'],
-    steps: [{ t: 'bet', course: '浦和', text: '浦和競馬場で馬券を買い、レースを見届ける' }, { t: 'chase', text: '逃げ出した車を止める' }], reward: 16e3 },
+    steps: [{ t: 'bet', course: '浦和', text: '浦和競馬場で馬券を買い、レースを見届ける' }, { t: 'enter', kind: 'car', text: '車に乗る（近くの車を奪ってもいい）' }, { t: 'chase', text: '逃げ出した車を止める' }], reward: 16e3 },
   // ---- 鎌倉湘南編
   { id: 'k1', ch: 'shonan', title: '古都さんぽ', who: 'saki', start: pe4(35.3192, 139.5506), intro: ['鎌倉の古民家物件の下見よ。', '鶴岡八幡宮と大仏さま、両方撮ってきて。'],
     steps: [{ t: 'photo', at: 'tsurugaoka', r: 200, text: '鶴岡八幡宮を撮影' }, { t: 'photo', at: 'daibutsu', r: 160, text: '鎌倉大仏を撮影' }], reward: 8e3 },
   { id: 'k2', ch: 'shonan', title: '江ノ電でGO', who: 'hana', start: pe4(35.3192, 139.5506), intro: ['江の島の土産物屋に届け物だ。', '江ノ電で行くのが一番だぜ。'],
     steps: [{ t: 'station', name: '鎌倉', text: '鎌倉駅に入る' }, { t: 'ride', to: '江ノ島', text: '江ノ電で江ノ島駅へ' }, { t: 'go', to: pe4(35.2995, 139.4808), r: 60, foot: !0, text: '江の島へ渡る' }], reward: 9e3 },
-  { id: 'k3', ch: 'shonan', title: '134号の風', who: 'ryo', start: pe4(35.3065, 139.4875), intro: ['湘南といえば134号だ。', 'バイクで茅ヶ崎まで流して、逗子まで戻ってこい。'],
-    steps: [{ t: 'spawn', car: 'moto', at: pe4(35.3068, 139.4882), text: 'バイクに乗る' }, { t: 'enter', kind: 'car', text: 'バイクに乗る' },
+  { id: 'k3', ch: 'shonan', title: '134号の風', who: 'ryo', start: pe4(35.3094, 139.4831), intro: ['湘南といえば134号だ。', 'バイクで茅ヶ崎まで流して、逗子まで戻ってこい。'],
+    steps: [{ t: 'spawn', car: 'moto', at: pe4(35.3091, 139.4836), text: 'バイクに乗る' }, { t: 'enter', kind: 'car', text: 'バイクに乗る' },
       { t: 'go', to: pe4(35.3185, 139.4045), r: 60, vehicle: !0, time: 300, text: '茅ヶ崎へ' }, { t: 'go', to: pe4(35.2958, 139.5797), r: 60, vehicle: !0, time: 420, text: '逗子まで戻る' }], reward: 14e3 },
   { id: 'k4', ch: 'shonan', title: 'モノレールで大船', who: 'ken', start: pe4(35.3086, 139.4858), intro: ['大船の営業所に顔を出さなきゃならない。', '湘南モノレールで行こう。宙に浮くような乗り心地だぞ。'],
     steps: [{ t: 'station', name: '湘南江の島', text: '湘南江の島駅に入る' }, { t: 'ride', to: '大船', text: 'モノレールで大船へ' }], reward: 8e3 },
@@ -649,7 +649,7 @@ function v4Tick(dt) {
   v4Weather(dt);
   for (const w of WHEELS) w.boost && (w.a += dt * w.boost);
   if ((V4.dexT -= dt) <= 0) ((V4.dexT = 1), v4Dex());
-  if ((V4.achT -= dt) <= 0) ((V4.achT = 2), v4Ach());
+  if ((V4.achT -= dt) <= 0) ((V4.achT = 2), v4Ach(), v4FixMissions());
 }
 // interact() hook for the new things on foot; true when handled
 function v4Interact() {
@@ -719,5 +719,57 @@ function v4Weather(dt) {
       SNOW.position.x += ox - 0;
       SNOW.position.z += oz - 0;
     }
+  }
+}
+
+// ---------- mission points that ended up inside a real building or on water (the v3.3 OSM map moved buildings onto
+// some of the old hand-placed points): move them to the pavement of the nearest ground road once their tile is loaded
+function v4TileReady(x, z) {
+  if (!TS.on) return !0;
+  const T = TS.tile;
+  return TS.tiles.has((Math.floor(x / T) + 512) * 1024 + (Math.floor(z / T) + 512));
+}
+function v4Blocked(x, z) {
+  if (isWaterAt(x, z)) return !0;
+  const ids = [];
+  buildingsNear(x, z, 40, ids);
+  for (const id of ids) if (W.bld[id * 9 + 6] >= 1 && bInside(id, x, z, 1.5)) return !0;
+  return !1;
+}
+function v4SafeSpot(p, onRoad) {
+  if (!v4TileReady(p[0], p[1])) return null;
+  if (!v4Blocked(p[0], p[1])) return p;
+  const a = [];
+  roadsNear(p[0], p[1], 250, a);
+  const c = a.filter((r) => !r.e.elev && r.e.kind !== 'X' && r.e.kind !== 'R').sort((u, v) => u.d - v.d);
+  for (const r of c) {
+    const e = r.e,
+      [x0, z0] = e.pts[r.j],
+      [x1, z1] = e.pts[r.j + 1],
+      L = Math.hypot(x1 - x0, z1 - z0) || 1,
+      nx = -(z1 - z0) / L,
+      nz = (x1 - x0) / L;
+    for (const sd of onRoad ? [0] : [1, -1]) {
+      const q = [r.x + nx * sd * (e.hw + 1.5), r.z + nz * sd * (e.hw + 1.5)];
+      if (!v4Blocked(q[0], q[1])) return q;
+    }
+  }
+  return p;
+}
+function v4FixMissions() {
+  const px = P.car ? P.car.x : P.x,
+    pz = P.car ? P.car.z : P.z;
+  for (const [m, mk] of x6) {
+    if (m.fixed || MS.done.has(m.id) || Math.hypot(m.start[0] - px, m.start[1] - pz) > 900) continue;
+    const q = v4SafeSpot(m.start, !1);
+    if (!q) continue;
+    m.fixed = !0;
+    if (q !== m.start) ((m.start = q), mk.position.set(q[0], 15, q[1]));
+  }
+  const cur = MS.cur,
+    s = cur && cur.steps[MS.step];
+  if (s && !s.fixed && s.to && typeof s.to[0] === 'number' && (s.t === 'go' || s.t === 'land') && !s.plane && Math.hypot(s.to[0] - px, s.to[1] - pz) < 900) {
+    const q = v4SafeSpot(s.to, !1);
+    q && ((s.fixed = !0), q !== s.to && ((s.to = q), (MS.target = q), updRoute()));
   }
 }

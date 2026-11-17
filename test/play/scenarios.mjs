@@ -111,7 +111,7 @@ export const SCEN = {
     });
   },
   async train(ctx) {
-    await ctx.ev(async () => { const S = T.st('新宿'); const e = S.entrances[0]; await T.tp(e.x, e.z, false); __G.P.x = e.x; __G.P.z = e.z; __G.interact(); });
+    const inside = await ctx.ev(async () => { const S = T.st('新宿'); const e = S.entrances[0]; await T.tp(e.x, e.z, false); __G.P.x = e.x; __G.P.z = e.z; __G.interact(); T.sim(0.5); const inn = !!__G.P.interior; inn && __G.doAction('trains'); return inn; });
     await W8(ctx, 1500);
     const lines = await ctx.page.$$eval('#stmenu .row', (rs) => rs.map((r) => r.textContent.trim().slice(0, 30)));
     // tap the first departure button of the first line
@@ -134,14 +134,15 @@ export const SCEN = {
     });
     await ctx.page.keyboard.press('KeyL'); await W8(ctx, 4000);
     const after = await ctx.ev(() => { T.sim(6); return T.snap(); });
-    return { lines, sub, r, beforeJump: j, after };
+    return { inside, lines, sub, r, beforeJump: j, after };
   },
   async train_drive(ctx) {
     return ctx.ev(async () => {
       const g = __G, P = g.P; const S = T.st('東京'); const e = S.entrances[0]; await T.tp(e.x, e.z, false); P.x = e.x; P.z = e.z;
       const rail = g.W.rails.find((r) => r.code === 'JT'); if (!g.PL.boardTrain(rail, 1)) return 'board failed';
-      P.train.drive = true; const tr = P.train;
-      const out = []; for (let i = 0; i < 6; i++) { g.TR.driverInput(tr, 'go'); g.KEYS.KeyW = true; T.sim(10); out.push([Math.round(tr.v * 3.6), tr.state]); }
+      const tr = P.train; Object.assign(tr, { drive: true, notch: 0, doors: true, state: 'dwell', dwell: 2, target: null }); P.trainCar = 0;
+      T.sim(1); g.interact(); T.sim(4);
+      const out = []; for (let i = 0; i < 6; i++) { tr.state === 'dwell' && g.interact(); g.KEYS.KeyW = true; T.sim(10); out.push([Math.round(tr.v * 3.6), tr.state, Math.round(tr.s)]); }
       g.KEYS.KeyW = false; g.KEYS.KeyS = true; T.sim(20); g.KEYS.KeyS = false; out.push([Math.round(tr.v * 3.6), tr.state]);
       return out;
     });
@@ -191,7 +192,7 @@ export const SCEN = {
     });
     await W8(ctx, 2000); await ctx.shot('fly_air');
     // irregular: jump out of the flying plane, skydive
-    const j = await ctx.ev(() => { const g = __G; g.PL.tryEnter(); const a = T.snap(); let k = 0; while (__G.P.mode !== 'foot' || !__G.P.onGround) { T.sim(1); if (k++ > 240) break; } return { a, end: T.snap(), sec: k }; });
+    const j = await ctx.ev(() => { const g = __G, P = g.P; g.PL.tryEnter(); const a = T.snap(); let k = 0, open = null; while (k++ < 300) { T.sim(1); if (!open && P.sky && P.sky.open) open = Math.round(P.y); if (P.mode === 'foot' && !P.sky && P.y - T.gy(P.x, P.z, P.y + 2) < 0.5) break; } return { a, open, end: T.snap(), sec: k, sky: !!P.sky }; });
     return { r, j };
   },
   async heli(ctx) {
@@ -348,4 +349,33 @@ SCEN.v4_slots = async (ctx) => {
   await W8(ctx, 3000);
   const got = await ctx.ev(() => ({ money: __G.G.money, slot: __G.X.getSlot(), started: __G.G.started }));
   return { rows, crow, got };
+};
+// every mission start / spawn / go target: inside a building? in water? how far to the nearest road?
+SCEN.mission_points = async (ctx) => ctx.ev(async () => {
+  const g = __G, B = g.W.bld, out = [];
+  const inside = (x, z) => { const ids = []; g.WD.buildingsNear(x, z, 40, ids); for (const id of ids) { const o = id * 9; if (B[o + 6] < 1) continue; const pp = g.X.PB.pp && g.X.PB.pp[id]; if (pp) { let c = false; for (let i = 0, j = pp.length - 2; i < pp.length; j = i, i += 2) { const xi = pp[i], zi = pp[i + 1], xj = pp[j], zj = pp[j + 1]; if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) c = !c; } if (c) return id; continue; } const a = Math.cos(B[o + 2]), s = Math.sin(B[o + 2]), u = (x - B[o]) * a + (z - B[o + 1]) * s, v = -(x - B[o]) * s + (z - B[o + 1]) * a; if (Math.abs(u) < B[o + 3] / 2 && Math.abs(v) < B[o + 4] / 2) return id; } return -1; };
+  for (const m of g.MI.MISSIONS) {
+    const pts = [['start', m.start]];
+    for (const s of m.steps) { if (s.at && typeof s.at !== 'string') pts.push([s.t + '.at', s.at]); if (s.to && s.t !== 'ride' && typeof s.to !== 'string') pts.push([s.t + '.to', s.to]); }
+    for (const [k, p] of pts) {
+      await g.X.tsPrefetch(p[0], p[1]);
+      const a = []; g.X.roadsNear(p[0], p[1], 300, a); const r = a.filter((q) => !q.e.elev).sort((x, y) => x.d - y.d)[0];
+      const bi = inside(p[0], p[1]), wat = g.WD.isWaterAt(p[0], p[1]);
+      if (bi >= 0 || wat || !r || r.d > 60) out.push([m.id, k, Math.round(p[0]), Math.round(p[1]), bi >= 0 ? 'IN-BUILDING h' + Math.round(B[bi * 9 + 6]) : '', wat ? 'WATER' : '', r ? 'road ' + Math.round(r.d) + 'm' : 'NO ROAD']);
+    }
+  }
+  return out;
+});
+// streaming memory: visit far places with frames running (tile unloading happens in the frame loop), GC, count
+SCEN.memstream = async (ctx) => {
+  const pts = [[-4867, -2166], [-12000, -20000], [-25000, -30000], [-20000, 10000], [-8000, 30000], [20000, 3000], [5000, -15000], [15000, -25000], [-4867, -2166]];
+  const out = [];
+  const m = async () => ctx.ev(() => { window.gc && gc(); const g = __G, TS = g.X.TS, mem = g.R.renderer.info.memory; return { heap: Math.round(performance.memory.usedJSHeapSize / 1e6), E: g.W.edges.length, N: g.W.nodes.length, tiles: TS.tiles.size, packs: TS.packs.size, pbTop: g.X.PB.top, geo: mem.geometries, tex: mem.textures, cars: g.G.cars.length, peds: g.G.peds.length }; });
+  out.push(['start', await m()]);
+  for (const [x, z] of pts) {
+    await ctx.ev(async ([x, z]) => { await T.tp(x, z); }, [x, z]);
+    await W8(ctx, 12000);
+    out.push([x + ',' + z, await m()]);
+  }
+  return out;
 };

@@ -22,14 +22,19 @@ for (const [name, fn] of Object.entries(SCEN)) {
   try { issues = await page.evaluate(() => T.issues); st = await page.evaluate(() => T.snap()); } catch (e) { err = (err || '') + ' | page dead: ' + e.message; }
   // freeze check: does the render loop still advance?
   let frozen = null;
-  try { const a = await page.evaluate(() => __G.G.t); await page.waitForTimeout(8000); const b = await page.evaluate(() => __G.G.t); frozen = b === a && !(await page.evaluate(() => __G.G.paused)); } catch (e) {}
+  try {
+    const a = await page.evaluate(() => __G.G.t); let b = a;
+    for (let k = 0; k < 6 && b === a; k++) { await page.waitForTimeout(5000); b = await page.evaluate(() => __G.G.t); }
+    frozen = b === a ? await page.evaluate(() => ({ paused: __G.G.paused, started: __G.G.started, minigame: !!__G.G.minigame, mode: __G.P.mode })) : null;
+    if (frozen && frozen.paused) frozen = null;
+  } catch (e) {}
   const r = { name, sec: Math.round((Date.now() - t0) / 1000), out, err, issues, errors: log.errors.slice(e0), frozen, end: st };
   results.push(r);
   console.log('\n=== ' + name + ' (' + r.sec + 's)' + (err ? ' ERR ' + err : ''));
   console.log(JSON.stringify(out)?.slice(0, 1500));
   if (issues.length) console.log('ISSUES', JSON.stringify(issues).slice(0, 1500));
   if (r.errors.length) console.log('CONSOLE', r.errors.join('\n').slice(0, 2500));
-  if (frozen) console.log('FROZEN');
+  if (frozen) console.log('FROZEN', JSON.stringify(frozen));
   await ctx.shot(name);
   fs.writeFileSync(`${OUT}/results.json`, JSON.stringify(results, null, 1));
 }

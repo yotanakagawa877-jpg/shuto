@@ -3065,7 +3065,7 @@ function initWorld(n, t) {
     r = o.s,
     a = o.ox,
     l = o.oz,
-    f = new Float32Array((s + (n.tiles ? (PB_CAP = TS.bake ? 5200000 : pbCapFor(R.Q.lod)) : n.ext && n.ext.dist ? (PB_CAP = pbCapFor(R.Q.lod)) : 0)) * 9);
+    f = new Float32Array((s + (n.tiles ? (PB_CAP = TS.bake ? 7000000 : pbCapFor(R.Q.lod)) : n.ext && n.ext.dist ? (PB_CAP = pbCapFor(R.Q.lod)) : 0)) * 9);
   pbInit(s);
   for (let c = 0; c < s; c++) {
     let h = c * 12;
@@ -22752,6 +22752,9 @@ function startMission(n) {
 function r5() {
   let n = MS.cur.steps[MS.step];
   if (((MS.st = {}), (MS.timer = n.time || 0), (MS.target = null), n.t === 'spawn')) {
+    // v4.0: a spawn point inside a building / on water goes onto the nearest ground road
+    const q = v4SafeSpot(n.at, !0);
+    q && q !== n.at && (n.at = q);
     let t = newCar(n.car, n.at[0], n.at[1], 0, 'phys', n.color);
     return (t && ((t.driver = !1), (t.parked = !0), (t.keep = !0), (t.y = 0.04), (MS.st.car = t), (MS.target = [n.at[0], n.at[1]])), MS.step++, r5());
   }
@@ -22796,9 +22799,15 @@ function r5() {
     ((MS.st.ci = 0), (MS.target = MS.st.cps[0]));
   }
   if (n.t === 'chase') {
-    let t = [];
-    roadsNear(player_P.x + 120, player_P.z + 60, 120, t);
-    let e = t.find((i) => !i.e.elev && i.e.kind === 'A') || t[0];
+    let t = [],
+      e = null;
+    // v4.0: search further out (racecourses, parks) and never start on a tile street, an elevated deck or a motorway
+    const px = player_P.mode === 'car' && player_P.car ? player_P.car.x : player_P.x,
+      pz = player_P.mode === 'car' && player_P.car ? player_P.car.z : player_P.z;
+    for (let rr = 120; rr <= 900 && !e; rr += 260) {
+      roadsNear(px + 120, pz + 60, rr, t);
+      e = t.find((i) => !i.e.elev && !i.e.tile && i.e.kind === 'A') || t.find((i) => !i.e.elev && !i.e.tile && i.e.kind !== 'X' && i.e.kind !== 'R');
+    }
     if (e) {
       let i = spawnAICar(e.x, e.z, 'sport');
       i && (toPhys(i), (i.ctl = 'npc'), (i.keep = !0), (i.hp = 140), (i.ai = lz), setColor(i, 15909424), (MS.st.car = i));
@@ -22911,7 +22920,12 @@ function updMissions(n) {
     }
     case 'chase': {
       let r = MS.st.car;
-      if (!r || r.removed || ((MS.target = [r.x, r.z]), (r.hp <= 0 || r.dead) && (o = !0), Math.hypot(r.x - i, r.z - s) > 700))
+      // v4.0: no road for the getaway car near here -> skip the chase instead of failing at once
+      if (!r) {
+        o = !0;
+        break;
+      }
+      if (r.removed || ((MS.target = [r.x, r.z]), (r.hp <= 0 || r.dead) && (o = !0), Math.hypot(r.x - i, r.z - s) > 700))
         return fail('\u898B\u5931\u3063\u305F');
       break;
     }

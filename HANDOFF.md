@@ -134,3 +134,33 @@ backup osm/fun.json is the raw extract for funpack.py. Checked: replay miss 0 (m
   release VERSION). Registered only top-level over https (not inside the Claude artifact).
 - Hosting plan: GitHub Pages via tools/deploy_pages.sh OWNER/REPO VERSION (force-pushes a history-less gh-pages
   branch each release). Needs the user's GitHub connected to Claude and an empty repo; then Pages: branch gh-pages / root.
+
+## v3.7–v3.9 (2026-11-03): map extended ±15 km (done in a separate session on the published build)
+- Bounds 35.30–35.93 / 139.43–140.07 -> 35.165–36.065 / 139.265–140.235 (久喜・川越・八王子・横須賀・佐倉…).
+  Pipeline: tools/ext (README there). Data checked in: data/world.json, data/tiles/*.bin (218 packs).
+- Ring rules: X/R/A/B global, tertiary and smaller = tile streets (memory, v3.9); buildings from OSM with heights from
+  tags or sampled from the v3.6 distribution; 29 lines extended (stations/services kept), 23 new lines with default services.
+- game.js: rgBuild key = cell*2^24 + index (the old *2^30 packing broke above 262,144 edges); webglcontextrestored ->
+  save + reload once per minute (static arrays are released after upload, a restored context cannot rebuild them).
+- Known: start-up replay (bake) not re-run for the ring (konbini/shrine lots there are live / absent).
+
+## v4.0 「首都圏ストーリー」 (2026-11-17)
+Code: src/v4.js, concatenated after src/game.js by tools/bundle.sh (same scope; game.js calls v4Tick / v4Interact /
+v4Prompt / v4Talk / slotKey / getSlot and uses V4, COASTERS, CHAPTERS, ACH).
+- Save slots 1–3: keys shuto2.save (slot 1, old saves), shuto2.save.2, .3; current slot in shuto2.slot.
+  Title CONTINUE / NEW GAME and pause セーブ open a slot list (#v4ov, v4Menu). v4ApplySave loads into a running world.
+- Achievements (ACH, 24) and 図鑑 (G.stats.dex: st stations within 90 m or stopped at, sh shrines (omairi doors within
+  30 m), lm landmarks (LM_JA keys of Mf within 260 m) + racecourses / wheels / theme parks). Pause menu 図鑑 / 実績.
+- Rides: Ferris wheels (WHEELS, gondola nearest the bottom, wheel boosted to one turn in 75 s), roller coasters
+  (COASTERS filled by funBuild: path, hAt profile; lift hill then gravity). Player stays mode 'foot' with V4.ride set
+  (updFoot skipped). Horse racing at every racecourse (big screen, rc.c): 8 horses, odds from hidden strength, race
+  along rings[0] (≤1,200 m). 調布 sightseeing flights: repeatable mission objects (repeat: true -> not stored in done).
+- Missions: 20 new (ch: yokohama / chiba / omiya / shonan) with new step types wheel / coaster / bet. Chapters open after
+  m3; each offers its next two (availableMissions). Chase step searches up to 900 m for a road and is skipped if none.
+- Weather: fog / snow (pause 天気 cycles 自動→晴れ→雨→霧→雪); auto picks snow in Dec–Feb, fog in the morning.
+- Talking: 乗る on foot with nothing else nearby talks to the nearest pedestrian (2.6 m).
+- Tests: test/play (Node + Playwright, 844x390 touch): node test/play/run.mjs [scenario,...] with SHOTDIR, URL, Q.
+  Scenarios: missions, mission_points, drive, wrongway, crash_building, water, expressway, train, train_drive, bus, taxi,
+  fly, heli, wanted5, map_edges, spam, idle, streamdrive, saveload, v4_rides, v4_bet, v4_tour, v4_talk_dex, v4_slots.
+- Pending proposals (performance, need approval): AI traffic on small streets; baking bus routes (start-up "transit"
+  is ~35 s headless on the extended map).
