@@ -1,0 +1,5 @@
+(()=>{const S=__G.W.stations;const ne=S.map(s=>s.entrances.length);return {routes:__G.TRN.ROUTES.length, stops:Object.keys(__G.TRN.STOPS).length, st:S.length, ent:ne.reduce((a,b)=>a+b,0), ent0:ne.filter(x=>x==0).length, sample:S.filter(s=>s.ja==='代々木'||s.ja==='目白'||s.ja==='六本木').map(s=>[s.ja,s.entrances.map(e=>e.label)])}})()
+(()=>{const s=__G.W.stations.find(s=>s.ja==='目白');const e=s.entrances[0];__G.P.x=e.x;__G.P.z=e.z;__G.sim(40);__G.G.cam.free=[e.x+e.face[0]*28+12,14,e.z+e.face[1]*28+12,e.x,4,e.z];__G.sim(3);return [e.x,e.z,e.label]})()
+wait 4000
+shot mejiro
+(()=>{const t0=performance.now();__G.G.cam.free=null;for(let i=0;i<900;i++)__G.sim(1);return [Math.round(performance.now()-t0), __G.G.cars.length, Math.round(performance.memory.usedJSHeapSize/1e6)]})()

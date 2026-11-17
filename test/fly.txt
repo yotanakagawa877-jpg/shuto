@@ -1,0 +1,8 @@
+(()=>{const a=__G.G.aircraft.find(a=>a.kind==='parked');__G.P.x=a.x+8;__G.P.z=a.z+8;__G.sim(30);return [a.x,a.z]})()
+key KeyF 150
+wait 500
+(()=>{const n=__G.P.air;const K=__G.KEYS;const r=[];K.ShiftLeft=true;for(let i=0;i<60;i++)__G.sim(1);K.ShiftLeft=false;for(let i=0;i<500;i++){__G.sim(1);if(i%100==0)r.push([Math.round(n.v),Math.round(n.y)]);} return [n.thr,r]})()
+(()=>{const n=__G.P.air;const K=__G.KEYS;K.KeyS=true;for(let i=0;i<70;i++)__G.sim(1);K.KeyS=false;const r=[];for(let i=0;i<900;i++){__G.sim(1);if(i%150==0)r.push([Math.round(n.v),Math.round(n.y),+n.pitch.toFixed(2)]);} return [r,n.crashed]})()
+(()=>{__G.HUD.dialog('管制塔',['羽田タワー、離陸を許可します。右旋回で東京湾へ向かってください。']);__G.HUD.big('MISSION START','羽田から東京タワーへ','#ffd23f');return 1})()
+wait 1500
+shot fly_pc

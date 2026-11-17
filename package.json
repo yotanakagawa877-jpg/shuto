@@ -1,0 +1,21 @@
+{
+  "name": "shuto3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/generator": "^8.0.6",
+    "@babel/parser": "^8.0.7",
+    "@babel/traverse": "^8.0.7",
+    "@babel/types": "^8.0.6",
+    "esbuild": "^0.24.0",
+    "prettier": "^3.9.10",
+    "three": "^0.169.0"
+  }
+}

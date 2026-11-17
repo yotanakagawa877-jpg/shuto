@@ -1,0 +1,5 @@
+node_modules/
+dist/
+test/shots/
+*.pyc
+__pycache__/

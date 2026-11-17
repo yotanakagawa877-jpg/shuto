@@ -1,0 +1,13 @@
+(()=>{window.__V=(code,st,dx,dy,dz)=>{const r=__G.W.rails.find(r=>r.code===code&&r.st.some(s=>s.ja===st));const s=r.st.find(s=>s.ja===st);const p=r.path[s.i];__G.P.x=p[0]+30;__G.P.z=p[1]+30;__G.sim(40);__G.G.cam.free=[p[0]+dx,dy,p[1]+dz,p[0],0,p[1]];__G.sim(3);return [p[0],p[1]]};return 1})()
+__V('JK','品川',-120,260,-160)
+wait 4000
+shot shinagawa
+__V('JK','東京',150,240,-120)
+wait 4000
+shot tokyo
+__V('JY','新宿',-120,260,160)
+wait 4000
+shot shinjuku
+__V('JK','横浜',160,240,-160)
+wait 4000
+shot yokohama
