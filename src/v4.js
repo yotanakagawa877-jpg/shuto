@@ -460,19 +460,45 @@ function v4PlaceBet(rc, names, str, odds, pick, amt) {
         d = Math.hypot(dx, dz) || 1;
       return [a[0] + dx * f - (dz / d) * off, a[1] + dz * f + (dx / d) * off, Math.atan2(dx, dz)];
     };
+  // horse: body, neck, head, four legs, tail; jockey in silks with a cap. Geometries are shared by the field.
   const grp = new THREE.Group(),
-    body = new THREE.BoxGeometry(0.7, 0.9, 2.2),
-    rider = new THREE.BoxGeometry(0.5, 0.7, 0.5),
-    hm = new THREE.MeshStandardMaterial({ color: 0x6b3f22, roughness: 0.7 }),
+    gBody = new THREE.BoxGeometry(0.62, 0.72, 1.9),
+    gNeck = new THREE.BoxGeometry(0.34, 0.95, 0.42),
+    gHead = new THREE.BoxGeometry(0.3, 0.32, 0.72),
+    gLeg = new THREE.BoxGeometry(0.16, 1.05, 0.16),
+    gTail = new THREE.BoxGeometry(0.1, 0.7, 0.12),
+    gRider = new THREE.BoxGeometry(0.44, 0.62, 0.36),
+    gCap = new THREE.BoxGeometry(0.26, 0.16, 0.28),
+    coats = [0x6b3f22, 0x4a2a17, 0x8a5a33, 0x2b1c12, 0x7a4b2a, 0x9b9188, 0x5c3a24, 0x3b2a20].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.75 })),
+    dark = new THREE.MeshStandardMaterial({ color: 0x1d1612, roughness: 0.8 }),
     horses = names.map((nm, i) => {
       const h = new THREE.Group(),
-        b = new THREE.Mesh(body, hm),
-        j = new THREE.Mesh(rider, new THREE.MeshStandardMaterial({ color: JOCKEY[i] }));
-      b.position.y = 1.4;
-      j.position.set(0, 2.2, -0.2);
-      h.add(b, j);
+        b = new THREE.Group(),
+        coat = coats[i % coats.length],
+        silk = new THREE.MeshStandardMaterial({ color: JOCKEY[i], roughness: 0.6 }),
+        mesh = (g, m, x, y, z, rx = 0) => {
+          const o = new THREE.Mesh(g, m);
+          o.position.set(x, y, z);
+          o.rotation.x = rx;
+          b.add(o);
+          return o;
+        };
+      mesh(gBody, coat, 0, 0, 0);
+      mesh(gNeck, coat, 0, 0.5, 0.95, 0.55);
+      mesh(gHead, coat, 0, 0.85, 1.32, 0.25);
+      mesh(gTail, dark, 0, -0.05, -1.0, -0.5);
+      mesh(gRider, silk, 0, 0.66, 0.1, 0.35);
+      mesh(gCap, silk, 0, 1.05, 0.22);
+      const legs = [[-0.2, 0.72], [0.2, 0.72], [-0.2, -0.72], [0.2, -0.72]].map(([x, z]) => {
+        const o = new THREE.Mesh(gLeg, dark);
+        o.position.set(x, -0.85, z);
+        b.add(o);
+        return o;
+      });
+      b.position.y = 1.42;
+      h.add(b);
       grp.add(h);
-      return { h, u: 0, v: 0, s: str[i] };
+      return { h, b, legs, u: 0, v: 0, s: str[i] };
     });
   R.scene.add(grp);
   const len = Math.min(L * 0.95, 1200);
@@ -493,7 +519,10 @@ function v4RaceTick(dt) {
     const p = r.at(h.u, 4 + i * 1.6);
     h.h.position.set(p[0], 0, p[1]);
     h.h.rotation.y = p[2];
-    h.h.children[0].position.y = 1.4 + Math.abs(Math.sin(r.t * 9 + i)) * 0.18;
+    const ph = r.t * (4 + h.v * 0.35) + i;
+    h.b.position.y = 1.42 + Math.abs(Math.sin(ph)) * 0.16;
+    h.b.rotation.x = Math.sin(ph) * 0.05;
+    h.legs.forEach((l, k) => (l.rotation.x = Math.sin(ph + (k < 2 ? 0 : Math.PI) + (k % 2) * 0.6) * Math.min(0.7, h.v * 0.05)));
     h.u >= r.len && r.fin.push(i);
   });
   if (r.fin.length && !r.called) ((r.called = 1), toast(`1着 ${r.fin[0] + 1}番 ${r.names[r.fin[0]]}！`));
@@ -510,7 +539,7 @@ function v4RaceTick(dt) {
     } else toast(`はずれ… 勝ったのは ${win + 1}番 ${r.names[win]}（${r.odds[win].toFixed(1)}倍）`);
     missionEvent('bet', { rc: r.rc });
     R.scene.remove(r.grp);
-    r.grp.traverse((o) => o.geometry && o.geometry.dispose());
+    r.grp.traverse((o) => (o.geometry && o.geometry.dispose(), o.material && o.material.dispose()));
     V4.race = null;
   }
 }
@@ -683,42 +712,46 @@ function v4Weather(dt) {
     snowT = V4.wx === 'snow' && !P.interior ? 1 : 0;
   V4.fog = (V4.fog || 0) + It(fogT - (V4.fog || 0), -dt * 0.08, dt * 0.08);
   V4.snow = (V4.snow || 0) + It(snowT - (V4.snow || 0), -dt * 0.1, dt * 0.1);
-  const f = R.scene.fog;
+  const f = R.scene.fog,
+    haze = Math.max(V4.fog, V4.snow * 0.55); // falling snow also shortens the view a little
   if (f && !P.interior) {
     const far = R.Q.lod * 1.05;
-    f.near = Ee(400, 25, V4.fog);
-    f.far = Ee(far, Math.min(far, 420), V4.fog);
-    V4.fog > 0.01 && f.color.lerp(new THREE.Color(0xc9ced4), V4.fog * 0.6);
+    f.near = Ee(400, V4.snow > V4.fog ? 30 : 8, haze);
+    f.far = Ee(far, Math.min(far, V4.snow > V4.fog ? 520 : 230), haze);
+    haze > 0.01 && f.color.lerp(new THREE.Color(V4.snow > V4.fog ? 0xdfe4ea : 0xc9ced4), haze * 0.6);
   }
   if (V4.snow > 0.01 && !SNOW) {
-    const N = 2400,
+    // flakes in a 70 x 34 x 70 m box that follows the camera; size is in screen pixels so near and far flakes both read
+    const N = 3200,
       a = new Float32Array(N * 3);
-    for (let i = 0; i < N; i++) ((a[i * 3] = rt(-60, 60)), (a[i * 3 + 1] = rt(0, 50)), (a[i * 3 + 2] = rt(-60, 60)));
+    for (let i = 0; i < N; i++) ((a[i * 3] = rt(-35, 35)), (a[i * 3 + 1] = rt(-14, 20)), (a[i * 3 + 2] = rt(-35, 35)));
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(a, 3));
-    SNOW = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size: 0.22, transparent: !0, opacity: 0, depthWrite: !1 }));
+    SNOW = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size: 2.6, sizeAttenuation: !1, transparent: !0, opacity: 0, depthWrite: !1 }));
     SNOW.frustumCulled = !1;
     R.scene.add(SNOW);
   }
   if (SNOW) {
     SNOW.visible = V4.snow > 0.01;
-    SNOW.material.opacity = V4.snow * 0.9;
+    SNOW.material.opacity = V4.snow * 0.95;
     if (SNOW.visible) {
       const c = R.camera.position,
-        pa = SNOW.geometry.attributes.position,
-        a = pa.array;
-      SNOW.position.set(Math.floor(c.x / 120) * 120, Math.max(0, c.y - 25), Math.floor(c.z / 120) * 120);
+        a = SNOW.geometry.attributes.position.array,
+        lx = c.x - (V4.snx ?? c.x),
+        lz = c.z - (V4.snz ?? c.z),
+        ly = c.y - (V4.sny ?? c.y);
+      ((V4.snx = c.x), (V4.sny = c.y), (V4.snz = c.z), SNOW.position.copy(c));
+      // particles live in camera-relative space: subtract the camera motion, fall, drift, and wrap inside the box
       for (let i = 0; i < a.length; i += 3) {
-        a[i + 1] -= dt * 1.4;
-        a[i] += Math.sin(G.t + i) * dt * 0.3;
-        a[i + 1] < 0 && (a[i + 1] += 50);
+        let x = a[i] - lx + Math.sin(G.t * 0.7 + i) * dt * 0.4,
+          y = a[i + 1] - ly - dt * 1.5,
+          z = a[i + 2] - lz;
+        x < -35 ? (x += 70) : x > 35 && (x -= 70);
+        z < -35 ? (z += 70) : z > 35 && (z -= 70);
+        y < -14 ? (y += 34) : y > 20 && (y -= 34);
+        ((a[i] = x), (a[i + 1] = y), (a[i + 2] = z));
       }
-      pa.needsUpdate = !0;
-      // keep the box centred on the camera: wrap x / z
-      const ox = c.x - SNOW.position.x,
-        oz = c.z - SNOW.position.z;
-      SNOW.position.x += ox - 0;
-      SNOW.position.z += oz - 0;
+      SNOW.geometry.attributes.position.needsUpdate = !0;
     }
   }
 }

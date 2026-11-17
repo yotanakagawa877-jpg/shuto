@@ -24096,7 +24096,7 @@ function updHUD(n, t) {
   (Zi.pt !== x && ((Zi.pt = x), (H.prompt.innerHTML = x)),
     fl(H.prompt, 'pr', !!x),
     K0 > 0 && ((K0 -= n), K0 <= 0 && (H.toast.classList.remove('on'), setTimeout(R6, 380))),
-    A1 > 0 && ((A1 -= n), A1 <= 0 && H.big.classList.remove('on')));
+    A1 > 0 && ((A1 -= n), A1 <= 0 && (H.big.classList.remove('on'), document.body.classList.remove('bigOn'))));
 }
 var ta = [],
   K0 = 0;
@@ -24112,7 +24112,7 @@ var A1 = 0;
 function big(n, t, e) {
   ((H.bigT.textContent = n), (H.bigS.textContent = t || ''), (H.bigT.style.color = e || '#fff'), H.big.classList.add('on'), (A1 = 3.6));
   // v4.0: while the big caption shows, toasts move below it (they shared the same place on touch screens)
-  (document.body.classList.add('bigOn'), clearTimeout(big.t), (big.t = setTimeout(() => document.body.classList.remove('bigOn'), 4200)));
+  document.body.classList.add('bigOn'); // removed with the caption in updHUD
 }
 var oh = {
   lines: [],
@@ -29239,7 +29239,9 @@ function Qz(n, t) {
       ? (Xt.taxiWait = null)
       : P.mode !== 'foot'
         ? ((Xt.taxiWait = null), releaseTaxi(s))
-        : s.waiting && Math.hypot(s.x - P.x, s.z - P.z) < 24
+        // v4.0: a taxi that stopped right in front of a player standing in the road never reaches its pickup point,
+        // so a stop within 8 m counts as arrived
+        : (s.waiting && Math.hypot(s.x - P.x, s.z - P.z) < 24) || (Math.hypot(s.x - P.x, s.z - P.z) < 8 && Math.abs(s.v || 0) < 1)
           ? ((Xt.taxiWait = null), Z6(s, 'taxi'), hw(s))
           : ((s.waitT = (s.waitT || 0) + n),
             s.waitT > 9 && !s.waiting && s.pick && s.mode === 'ai' && ((s.waitT = 0), placeOnEdge(s, s.pick.e, s.pick.s, 18)));

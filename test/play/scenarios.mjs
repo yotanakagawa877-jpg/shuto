@@ -171,17 +171,31 @@ export const SCEN = {
     const c = await ctx.ev(() => { let k = 0; while (__G.RIDE.kind !== 'bus' && k++ < 120) T.sim(1); const a = T.snap(); T.sim(20); __G.interact(); T.sim(3); return { waited: k, a, s: T.snap(), ride: __G.RIDE.kind }; });
     return { a, b, btns, btn2, c };
   },
+  async taxi_probe(ctx) {
+    return ctx.ev(async () => {
+      const g = __G, R = g.RIDE; await T.tp(-2900, 1300); g.callTaxi(); const w = R.taxiWait; const out = [];
+      for (let i = 0; i < 24; i++) { T.sim(5); out.push([i * 5, w && Math.round(Math.hypot(w.x - g.P.x, w.z - g.P.z)), w && Math.round(w.v || 0), g.P.mode, !!(w && w.removed), w && w.hold, w && w.ctl ? 1 : 0]); if (g.P.mode === 'ride') break; }
+      return { has: !!w, out, prompt: g.X.v4Prompt ? document.getElementById('prompt').textContent : '' };
+    });
+  },
   async taxi(ctx) {
     await ctx.ev(async () => { await T.tp(-2900, 1300); });
     await ctx.page.tap('#bX').catch(() => {}); await W8(ctx, 800);
     const near = await ctx.ev(() => { const g = __G; let k = 0; while (g.P.mode !== 'ride' && k++ < 90) T.sim(1); return { waited: k, mode: g.P.mode }; });
     await W8(ctx, 2000);
-    const menu = await ctx.page.$$eval('#stmenu button', (bs) => bs.map((b) => b.textContent.trim().slice(0, 16)));
-    if (menu.length > 1) { await ctx.page.tap('#stmenu button:not(#stClose)'); await W8(ctx, 1500); }
-    const m2 = await ctx.page.$$eval('#stmenu button', (bs) => bs.map((b) => b.textContent.trim().slice(0, 16)));
-    if (m2.length > 1) { await ctx.page.tap('#stmenu button:not(#stClose)'); await W8(ctx, 1500); }
-    const s = await ctx.ev(() => { T.sim(20); return T.snap(); });
-    return { near, menu, m2, s, ride: await ctx.ev(() => __G.RIDE.kind) };
+    // only the visible taxi menu counts (#stmenu keeps old rows while hidden)
+    const vis = async () => (await ctx.page.isVisible('#stmenu')) ? ctx.page.$$eval('#stmenu button', (bs) => bs.filter((b) => b.offsetParent).map((b) => b.textContent.trim().slice(0, 16))) : [];
+    const tapFirst = () => ctx.page.locator('#stmenu button:not(#stClose):visible').first().tap({ timeout: 8000 }).catch(() => {});
+    await ctx.page.waitForSelector('#stmenu', { state: 'visible', timeout: 20000 }).catch(() => {});
+    const menu = await vis();
+    if (menu.length > 1) { await tapFirst(); await W8(ctx, 1500); }
+    const m2 = await vis();
+    if (m2.length > 1) { await tapFirst(); await W8(ctx, 1500); }
+    const trace = await ctx.ev(() => { const o = []; for (let i = 0; i < 8; i++) { T.sim(5); const c = __G.P.car; o.push([__G.P.mode, __G.RIDE.kind, c && Math.round(c.v), c && c.mode, Math.round(__G.P.x), Math.round(__G.P.z)]); } return o; });
+    const s = await ctx.ev(() => T.snap());
+    const ride = await ctx.ev(() => __G.RIDE.kind);
+    if (await ctx.page.isVisible('#stmenu')) await ctx.page.tap('#stClose').catch(() => {});
+    return { near, menu: menu.length, m2: m2.length, trace, s, ride };
   },
   async fly(ctx) {
     const r = await ctx.ev(async () => {
@@ -239,6 +253,7 @@ export const SCEN = {
     });
   },
   async spam(ctx) {
+    if (await ctx.page.isVisible('#stmenu')) await ctx.page.tap('#stClose', { timeout: 5000 }).catch(() => {});
     await ctx.ev(async () => { await T.tp(-4867, -2166); __G.X.newCar('sedan', __G.P.x + 3, __G.P.z, 0, 'phys'); });
     for (let i = 0; i < 25; i++) { await ctx.page.tap('#bEnter').catch(() => {}); await W8(ctx, 60); }
     for (let i = 0; i < 8; i++) { await ctx.page.tap('#pauseBtn').catch(() => {}); await W8(ctx, 200); await ctx.page.tap('#pResume').catch(() => {}); await W8(ctx, 150); }
@@ -378,6 +393,37 @@ SCEN.memstream = async (ctx) => {
     await ctx.ev(async ([x, z]) => { await T.tp(x, z); }, [x, z]);
     await W8(ctx, 12000);
     out.push([x + ',' + z, await m()]);
+  }
+  return out;
+};
+SCEN.race_probe = async (ctx) => {
+  await ctx.ev(async () => { const g = __G, rc = g.W.fun.race.find((r) => /大井/.test(r.name)); g.R.tod = 13; await T.tp(rc.c[0], rc.c[1], false); g.P.x = rc.c[0]; g.P.z = rc.c[1]; g.G.money = 1e5; g.interact(); });
+  await W8(ctx, 1200);
+  await ctx.page.locator('#v4ov .v4l .row').nth(2).locator('button').first().tap().catch(() => {});
+  const a = await ctx.ev(() => {
+    const g = __G, r = g.X.V4.race; if (!r) return 'no race';
+    T.sim(12); const h = r.horses[0].h; const wp = new (h.position.constructor)(); h.getWorldPosition(wp);
+    const y = g.G.cam.yaw; g.P.x = wp.x - Math.sin(y) * 14; g.P.z = wp.z - Math.cos(y) * 14; T.sim(0.5); r.horses.forEach((o) => (o.s = 0, o.v = 0)); // hold the field still for the (slow) headless frame
+    const cam = g.R.camera; const scr = r.horses.slice(0, 3).map((o) => { const v = new (wp.constructor)(); o.h.children[0].getWorldPosition(v); const d = v.distanceTo(cam.position); v.project(cam); return [+v.x.toFixed(2), +v.y.toFixed(2), +v.z.toFixed(3), Math.round(d), o.h.children[0].visible]; });
+    const lights = []; g.R.scene.traverse((o) => o.isLight && lights.push(o.type));
+    var dbg = { scr, lights, cam: [Math.round(cam.position.x), Math.round(cam.position.y), Math.round(cam.position.z)], P: [Math.round(g.P.x), Math.round(g.P.z)] };
+    return { inScene: !!r.grp.parent, vis: r.grp.visible, h0: [Math.round(wp.x), Math.round(wp.y), Math.round(wp.z)], u: Math.round(r.horses[0].u), dbg };
+  });
+  await W8(ctx, 6000); await ctx.shot('race_probe');
+  return a;
+};
+SCEN.weather_probe = async (ctx) => {
+  const st = () => ctx.ev(() => { const g = __G, f = g.R.scene.fog, V = g.X.V4; let pts = 0; g.R.scene.traverse((o) => { o.isPoints && o.visible && pts++; }); return { wx: V.wx, fog: +(V.fog || 0).toFixed(2), snow: +(V.snow || 0).toFixed(2), near: Math.round(f.near), far: Math.round(f.far), pts, t: Math.round(g.G.t) }; });
+  const out = [];
+  for (const label of ['雪', '霧']) {
+    await ctx.page.tap('#pauseBtn'); await W8(ctx, 800);
+    for (let i = 0; i < 6 && !(await ctx.page.textContent('#pWeather')).includes(label); i++) { await ctx.page.tap('#pWeather'); await W8(ctx, 300); }
+    await ctx.page.tap('#pResume'); await W8(ctx, 500);
+    out.push(label, await st());
+    await ctx.ev(() => T.sim(15));
+    out.push(await st());
+    await W8(ctx, 3000); await ctx.shot('weather_' + (label === '雪' ? 'snow' : 'fog'));
+    out.push(await st());
   }
   return out;
 };
