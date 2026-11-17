@@ -17,5 +17,8 @@
     "esbuild": "^0.24.0",
     "prettier": "^3.9.10",
     "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
   }
 }

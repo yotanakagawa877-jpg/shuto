@@ -15,7 +15,7 @@ os.makedirs(OUT, exist_ok=True)
 
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(headless=True, args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist',
+        b = await p.chromium.launch(headless=True, executable_path=os.environ.get('PW_EXEC') or None, args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist',
                                                          '--js-flags=--expose-gc', '--enable-precise-memory-info'])
         ctx = await b.new_context(viewport={'width': W, 'height': H}, has_touch=TOUCH, is_mobile=TOUCH, device_scale_factor=1)
         pg = await ctx.new_page()

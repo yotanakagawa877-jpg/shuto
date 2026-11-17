@@ -11479,6 +11479,7 @@ function funBuild() {
       return Math.max(2.5, H * (0.22 + 0.78 * (0.5 + 0.5 * Math.cos((2 * Math.PI * (u - 0.14 * L)) / lam)) * (1 - 0.65 * g)));
     };
     const col = cols[ci % cols.length];
+    COASTERS.push({ P, cum, L, H, hAt, at: (u) => { let i = 0; for (; i < P.length - 2 && cum[i + 1] < u; ) i++; const f = (u - cum[i]) / (cum[i + 1] - cum[i] || 1); return [P[i][0] + (P[i + 1][0] - P[i][0]) * f, P[i][1] + (P[i + 1][1] - P[i][1]) * f]; } });
     let lastSup = -1e9;
     for (let u = 0, i = 0; u < L - 0.01; u += 3) {
       for (; i < P.length - 2 && cum[i + 1] < u; ) i++;
@@ -22714,10 +22715,18 @@ function az() {
   }
 }
 function availableMissions() {
-  let n = [];
+  // v4.0: the Tokyo story (no chapter) offers its next three missions; every chapter of 首都圏ストーリー offers its
+  // next two once the first three Tokyo missions are done
+  let n = [],
+    per = {};
+  const open = MS.done.has('m3');
   for (let t = 0; t < MISSIONS.length; t++) {
     let e = MISSIONS[t];
-    if (!MS.done.has(e.id) && (n.push(e), n.length >= 3)) break;
+    if (MS.done.has(e.id) || e.repeat) continue;
+    const c = e.ch || '';
+    if (c && !open) continue;
+    per[c] = (per[c] || 0) + 1;
+    per[c] <= (c ? 2 : 3) && n.push(e);
   }
   return n;
 }
@@ -22753,6 +22762,16 @@ function r5() {
   if (n.t === 'photo') {
     let t = W.landmarks[n.at];
     MS.target = [t.x, t.z];
+  }
+  if (n.t === 'wheel' || n.t === 'coaster') {
+    let px = player_P.x, pz = player_P.z, b = null, bd = 1e18;
+    if (n.t === 'wheel') for (const w of WHEELS) { const d = Math.hypot(w.x - px, w.z - pz); d < bd && ((bd = d), (b = [w.x, w.z])); }
+    else for (const c of COASTERS) { const d = Math.hypot(c.P[0][0] - px, c.P[0][1] - pz); d < bd && ((bd = d), (b = [c.P[0][0], c.P[0][1]])); }
+    MS.target = b;
+  }
+  if (n.t === 'bet' && W.fun) {
+    let rc = W.fun.race.find((r) => !n.course || r.name.includes(n.course)) || W.fun.race[0];
+    rc && (MS.target = [rc.c[0], rc.c[1]]);
   }
   if (n.t === 'race') {
     let t = W.edges.filter((l) => W.roadNames[l.road] === n.road),
@@ -22906,6 +22925,11 @@ function updMissions(n) {
     case 'photo':
       MS.st.shot && (o = !0);
       break;
+    case 'wheel':
+    case 'coaster':
+    case 'bet':
+      MS.st.ok && (o = !0);
+      break;
     case 'rings': {
       let r = MS.st.rings[MS.st.ri];
       ((ms.visible = !0),
@@ -22946,11 +22970,14 @@ function missionEvent(n, t) {
       ? (MS.st.shot = !0)
       : xt('toast', '\u3082\u3063\u3068\u8FD1\u3065\u3044\u3066\u64AE\u5F71\u3057\u3088\u3046');
   }
+  (n === 'wheel' || n === 'coaster') && i.t === n && (MS.st.ok = !0);
+  n === 'bet' && i.t === 'bet' && (!i.course || (t && t.rc && t.rc.name.includes(i.course))) && (MS.st.ok = !0);
   (n === 'wasted' || n === 'busted') && fail(n === 'wasted' ? '\u3084\u3089\u308C\u305F' : '\u902E\u6355\u3055\u308C\u305F');
 }
 function cz() {
   let n = MS.cur;
-  (MS.done.add(n.id),
+  n.repeat ? (v4Stats().tours++, G.stats.jobs++) : MS.done.add(n.id);
+  (0,
     (G.money += n.reward),
     G.stats.missions++,
     gt.mission(),
@@ -24146,12 +24173,20 @@ function listMenu(n, t, e, i) {
 }
 function fillPause() {
   let n = j0('pMissions');
-  n.innerHTML = MISSIONS.map((e) => `${MS.done.has(e.id) ? '\u2714' : availableMissions().includes(e) ? '\u25CF' : '\u30FB'} <b>${e.title}</b>`).join(
-    '<br>',
-  );
+  {
+    // v4.0: grouped by chapter (東京 + 首都圏ストーリー)
+    const av = availableMissions(), grp = [['', '東京編'], ...Object.entries(CHAPTERS)];
+    n.innerHTML = grp
+      .map(([c, name]) => {
+        const L = MISSIONS.filter((e) => (e.ch || '') === c && !e.repeat);
+        return `<div style="margin-top:6px;color:#ffd23f;font-weight:800">${name} ${L.filter((e) => MS.done.has(e.id)).length}/${L.length}</div>` +
+          L.map((e) => `${MS.done.has(e.id) ? '\u2714' : av.includes(e) ? '\u25CF' : '\u30FB'} <b>${e.title}</b>`).join('<br>');
+      })
+      .join('');
+  }
   let t = G.stats;
   j0('pStats').innerHTML =
-    `\u30DF\u30C3\u30B7\u30E7\u30F3 <b>${MS.done.size}/${MISSIONS.length}</b><br>\u4ED5\u4E8B <b>${t.jobs}</b> \u4EF6<br>\u4E57\u8ECA <b>${t.rides}</b> \u56DE \u30FB \u30D5\u30E9\u30A4\u30C8 <b>${t.flights}</b> \u56DE<br>\u30AC\u30C1\u30E3\u30AB\u30D7\u30BB\u30EB <b>${t.capsules.length}/50</b><br>\u8D70\u884C\u8DDD\u96E2 <b>${(t.distance / 1e3).toFixed(1)} km</b>`;
+    `\u30DF\u30C3\u30B7\u30E7\u30F3 <b>${MISSIONS.filter((m) => MS.done.has(m.id)).length}/${MISSIONS.filter((m) => !m.repeat).length}</b>\u3000\u5B9F\u7E3E <b>${v4Stats().ach.length}/${ACH.length}</b>\u3000\u56F3\u9451 <b>${v4Stats().dex.st.length + v4Stats().dex.sh.length + v4Stats().dex.lm.length}</b><br><br>\u4ED5\u4E8B <b>${t.jobs}</b> \u4EF6<br>\u4E57\u8ECA <b>${t.rides}</b> \u56DE \u30FB \u30D5\u30E9\u30A4\u30C8 <b>${t.flights}</b> \u56DE<br>\u30AC\u30C1\u30E3\u30AB\u30D7\u30BB\u30EB <b>${t.capsules.length}/50</b><br>\u8D70\u884C\u8DDD\u96E2 <b>${(t.distance / 1e3).toFixed(1)} km</b>`;
 }
 var BT = {};
 vi(BT, {
@@ -27500,14 +27535,14 @@ ow.addEventListener('click', (n) => {
         '\u753B\u8CEA\u306E\u5909\u66F4\u306F\u518D\u8D77\u52D5\u5F8C\u306B\u53CD\u6620\u3055\u308C\u307E\u3059')));
 });
 rw();
-var Bz = Qi.get(Mh);
+var Bz = Qi.get(slotKey());
 Bz || (($t('tContinue').disabled = !0), $t('tContinue').classList.remove('pri'), $t('tNew').classList.add('pri'));
 $t('tContinue').onclick = () => {
-  Qi.get(Mh) && aw(!0);
+  Qi.get(slotKey()) && aw(!0);
 };
 var K6 = 0;
 $t('tNew').onclick = () => {
-  if (Qi.get(Mh) && Date.now() - K6 > 4e3) {
+  if (Qi.get(slotKey()) && Date.now() - K6 > 4e3) {
     ((K6 = Date.now()),
       ($t('tNew').querySelector('small').textContent =
         '\u30BB\u30FC\u30D6\u3092\u4E0A\u66F8\u304D\u3057\u307E\u3059\u3002\u3082\u3046\u4E00\u5EA6\u62BC\u3059\u3068\u958B\u59CB'),
@@ -27587,7 +27622,7 @@ async function aw(n) {
           z: l.z,
           yaw: l.yaw,
         });
-    let o = n ? Qi.get(Mh) : null;
+    let o = n ? Qi.get(slotKey()) : null;
     (initMissions(o),
       initCapsules(o && o.caps),
       initHUD(),
@@ -27642,7 +27677,7 @@ async function aw(n) {
       (G.diagF = 0),
       (ph = !1),
       (window.__G = {
-        X: { get SV() { return SV; }, TS, tsPrefetch, newCar, physCar, surfaceAt, edgePos, edgeY, roadsNear, get CT() { return CT; }, departMenu, MM2, svNextTrain, skipToDest, rideDestMenu, PB, XS, lg, DR, openBusMenu, rideBusDestMenu, skipBusTo },
+        X: { get STOPS() { return STOPS; }, get V4() { return V4; }, get COASTERS() { return COASTERS; }, WHEELS, nearestStation, v4Interact, v4Prompt, v4DexMenu, v4AchMenu, v4SaveMenu, v4Talk, getSlot, slotKey, v4ApplySave, get SV() { return SV; }, TS, tsPrefetch, newCar, physCar, surfaceAt, edgePos, edgeY, roadsNear, get CT() { return CT; }, departMenu, MM2, svNextTrain, skipToDest, rideDestMenu, PB, XS, lg, DR, openBusMenu, rideBusDestMenu, skipBusTo },
         LM: LM,
         FIRE: FIRE,
         WP: WP,
@@ -27735,7 +27770,7 @@ function Gz(n) {
 }
 function saveGame(n) {
   let [t, e] = oc();
-  (Qi.set(Mh, {
+  (Qi.set(slotKey(), {
     v: 2,
     color: G.playerColor,
     x: t,
@@ -28011,6 +28046,8 @@ function jz() {
           auto: '\u81EA\u52D5',
           clear: '\u6674\u308C',
           rain: '\u96E8',
+          fog: '霧',
+          snow: '雪',
         }[ge.weather]));
   };
   (($t('pDiag').onclick = () => {
@@ -28026,8 +28063,10 @@ function jz() {
       ((ge.weather = {
         auto: 'clear',
         clear: 'rain',
-        rain: 'auto',
-      }[ge.weather]),
+        rain: 'fog',
+        fog: 'snow',
+        snow: 'auto',
+      }[ge.weather] || 'auto'),
         Qi.set(gr, ge),
         n());
     }),
@@ -28111,6 +28150,11 @@ function pause(n) {
 }
 function interact() {
   if (!G.started || G.paused || G.dying) return;
+  if (v4MenuOpen()) return;
+  if (V4.ride) {
+    v4Interact();
+    return;
+  }
   if (dialogOpen()) {
     nextLine();
     return;
@@ -28175,6 +28219,7 @@ function interact() {
       startMission(t);
       return;
     }
+    if (v4Interact()) return;
     let e = nearDoor(P.x, P.z);
     if (e) {
       e.act ? Jz(e) : e.type === 'deck' ? enterDeck(e) : e.type === 'property' ? offerProperty(e.prop) : enter(e);
@@ -28199,7 +28244,9 @@ function interact() {
     }
   }
   let n = P.air;
-  tryEnter() && n && P.mode === 'foot' && n.kind === 'heliP' && ((n.ref.spin = 0), (n.ref.x = n.x), (n.ref.y = n.y), (n.ref.z = n.z));
+  const ok = tryEnter();
+  ok && n && P.mode === 'foot' && n.kind === 'heliP' && ((n.ref.spin = 0), (n.ref.x = n.x), (n.ref.y = n.y), (n.ref.z = n.z));
+  ok || (P.mode === 'foot' && !P.interior && v4Talk());
 }
 // ---------- v3.2 departure board: lines -> services (type, name, destination, ETA) -> board / choose destination / drive
 function svStopIdx(sv, back, st) {
@@ -29258,9 +29305,12 @@ function t7() {
       : Xt.dest
         ? t('\u30B9\u30AD\u30C3\u30D7\u3057\u3066\u5230\u7740') + (oi ? '' : '\u3000<kbd>Shift</kbd>\u65E9\u9001\u308A')
         : '';
+  if (V4.ride) return '';
   if (P.mode !== 'foot') return '';
   let e = nearMissionStart(P.x, P.z);
   if (e) return t(`\u30DF\u30C3\u30B7\u30E7\u30F3\u300C${e.title}\u300D`);
+  const v4p = v4Prompt();
+  if (v4p) return t(v4p);
   let i = nearStop(P.x, P.z);
   if (i && !nearDoor(P.x, P.z))
     return (
@@ -29483,17 +29533,27 @@ function n7() {
 var ra = 0,
   ic = 600;
 function i7(n) {
-  if (ge.weather === 'clear') ra = 0;
-  else if (ge.weather === 'rain') ra = 1;
+  // v4.0: fog and snow besides rain; in 自動 the season (real month) decides whether snow can fall
+  if (ge.weather === 'clear') ((ra = 0), (V4.wx = null));
+  else if (ge.weather === 'rain') ((ra = 1), (V4.wx = null));
+  else if (ge.weather === 'fog') ((ra = 0), (V4.wx = 'fog'));
+  else if (ge.weather === 'snow') ((ra = 0), (V4.wx = 'snow'));
   else if (((ic -= n), ic <= 0)) {
-    let t = Math.random();
+    let t = Math.random(),
+      mo = new Date().getMonth(),
+      winter = mo === 11 || mo <= 1;
+    V4.wx = null;
     ra > 0
       ? ((ra = 0), (ic = rt(900, 1800)))
-      : t < 0.12
-        ? ((ra = rt(0.6, 1)), (ic = rt(150, 300)))
-        : t < 0.2
-          ? ((ra = rt(0.25, 0.4)), (ic = rt(120, 240)))
-          : ((ra = 0), (ic = rt(600, 1200)));
+      : winter && t < 0.12
+        ? ((V4.wx = 'snow'), (ic = rt(240, 480)))
+        : t < 0.12
+          ? ((ra = rt(0.6, 1)), (ic = rt(150, 300)))
+          : t < 0.2
+            ? ((ra = rt(0.25, 0.4)), (ic = rt(120, 240)))
+            : t < 0.26 && R.tod > 4 && R.tod < 10
+              ? ((V4.wx = 'fog'), (ic = rt(240, 420)))
+              : ((ra = 0), (ic = rt(600, 1200)));
   }
   rn.uRain.value += It(ra - rn.uRain.value, -n * 0.05, n * 0.05);
 }
@@ -29592,7 +29652,7 @@ function SM(n, t = !0) {
     Sn('KeyT') && P.mode === 'foot' && !P.interior && callTaxi(),
     Sn('KeyG') && P.mode === 'foot' && !P.interior && q1(),
     P.mode === 'foot'
-      ? (updFoot(n), updDeck())
+      ? V4.ride || (updFoot(n), updDeck())
       : P.mode === 'plane' && P.air && !P.air.crashed
         ? (flyPlane(P.air, n), (e.thrLevel = P.air.thr))
         : P.mode === 'heli' && P.air && !P.air.crashed && flyHeli(P.air, n));
@@ -29636,6 +29696,7 @@ function SM(n, t = !0) {
     updMissions(n),
     updJob(n),
     updCapsules(),
+    v4Tick(n),
     updGTA(n),
     (vM -= n),
     vM <= 0 && ((vM = 0.5), updFronts(s, o), updStops(s, o)),

@@ -3,3 +3,4 @@ dist/
 test/shots/
 *.pyc
 __pycache__/
+src/.game_all.js

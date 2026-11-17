@@ -1,11 +1,11 @@
 # sampled heap profile of live objects after start-up: memory retained, grouped by allocating function
-import sys, json, asyncio, time
+import sys, json, asyncio, time, os
 from collections import defaultdict
 from playwright.async_api import async_playwright
 URL = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8765/index.html'
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(headless=True, args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--js-flags=--expose-gc', '--enable-precise-memory-info'])
+        b = await p.chromium.launch(headless=True, executable_path=os.environ.get('PW_EXEC') or None, args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--js-flags=--expose-gc', '--enable-precise-memory-info'])
         ctx = await b.new_context(viewport={'width': 852, 'height': 393}, has_touch=True, is_mobile=True)
         pg = await ctx.new_page()
         await pg.add_init_script("try{localStorage.setItem('shuto2.settings',JSON.stringify({quality:'low'}))}catch(e){}")
