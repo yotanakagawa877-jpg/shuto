@@ -33,6 +33,8 @@ function v5Steer(n, r) {
 // ---------- after each physics step
 var V5RQ = [];
 function v5AfterPhys(n, t) {
+  // parked / standing cars: nothing to do (this runs for every physics car every frame)
+  if (!n.flip && !n.susp && !n.landV && (n.hp === n.hpSeen || (n.ctl !== 'player' && n.ctl !== 'police')) && Math.abs(n.vx) + Math.abs(n.vz) < 0.4) return;
   // ground roads over water: a railing along the bridge edge (the old code let cars roll off into the river)
   if (!n.air && (n.y || 0) < 3 && !n.sink && n.td && !n.td.bike) {
     roadsNear(n.x, n.z, 18, V5RQ);

@@ -13067,7 +13067,7 @@ function spawnAICar(n, t, e) {
     o = s.e;
   if (o.len < 20 || o.dead) return null;
   // v5.0 (approved): about a third of the traffic on the small streets of the streamed tiles, within 250 m
-  if (o.tile && (Math.random() > 0.35 || o.hw < 1.8 || Math.hypot(n - player_P.x, t - player_P.z) > 250)) return null;
+  if (!e && o.tile && (Math.random() > 0.35 || o.hw < 1.8 || Math.hypot(n - player_P.x, t - player_P.z) > 250)) return null;
   let r = W.nodes[o.a],
     a = W.nodes[o.b],
     l = It(s.s, r.r + 3, o.len - a.r - 3);
@@ -27724,7 +27724,7 @@ async function aw(n) {
       (G.diagF = 0),
       (ph = !1),
       (window.__G = {
-        X: { get STOPS() { return STOPS; }, get V4() { return V4; }, get V5() { return V5; }, get LUL() { return LUL; }, luAt, facNearest, v5FacPrompt, v5Places, get MIL() { return MIL; }, get MIL_DATA() { return MIL_DATA; }, prefAt, policeName, v5Roadblock, v5Gunshot, v5Crash, get DOGS() { return DOGS; }, get USV() { return USV; }, usvClean, usvBuild, usvRebuild, usvCode, usvParse, usvStart, usvList, usvReach, usvRaw, railGraph, get COASTERS() { return COASTERS; }, WHEELS, nearestStation, v4Interact, v4Prompt, v4DexMenu, v4AchMenu, v4SaveMenu, v4Talk, getSlot, slotKey, v4ApplySave, get SV() { return SV; }, TS, tsPrefetch, newCar, physCar, surfaceAt, edgePos, edgeY, roadsNear, get CT() { return CT; }, departMenu, MM2, svNextTrain, skipToDest, rideDestMenu, PB, XS, lg, DR, openBusMenu, rideBusDestMenu, skipBusTo },
+        X: { get STOPS() { return STOPS; }, get V4() { return V4; }, get V5() { return V5; }, get EVT() { return EVT; }, get NEWS() { return NEWS; }, get LUL() { return LUL; }, luAt, facNearest, v5FacPrompt, v5Places, get MIL() { return MIL; }, get MIL_DATA() { return MIL_DATA; }, prefAt, policeName, v5Roadblock, v5Gunshot, v5Crash, get DOGS() { return DOGS; }, get USV() { return USV; }, usvClean, usvBuild, usvRebuild, usvCode, usvParse, usvStart, usvList, usvReach, usvRaw, railGraph, get COASTERS() { return COASTERS; }, WHEELS, nearestStation, v4Interact, v4Prompt, v4DexMenu, v4AchMenu, v4SaveMenu, v4Talk, getSlot, slotKey, v4ApplySave, get SV() { return SV; }, TS, tsPrefetch, newCar, physCar, surfaceAt, edgePos, edgeY, roadsNear, get CT() { return CT; }, departMenu, MM2, svNextTrain, skipToDest, rideDestMenu, PB, XS, lg, DR, openBusMenu, rideBusDestMenu, skipBusTo },
         LM: LM,
         FIRE: FIRE,
         WP: WP,

@@ -531,7 +531,8 @@ function usvPick(def, S, filter = '') {
     miss.length && (extra = `<div class="v5sec">選べない駅</div>` + [...new Set(miss)].slice(0, 12).map((m) => `<div class="v5no">${esc5(m)}<small>線路がつながっていないため選べません</small></div>`).join(''));
   }
   const rows = L.map((o, i) => `<div class="row"><i style="background:${o.col || '#888'}"></i><b>${esc5(o.ja)}<small style="display:block;color:#8a93a3;font-weight:500">${esc5(o.line)}　約${(o.d / 1000).toFixed(1)} km</small></b><button data-i="${i}">ここに停車</button></div>`).join('');
-  const ov = v5Open('停車駅を追加', `<div class="v5row"><input id="v5q" placeholder="駅名・路線名で絞り込み" value="${esc5(f)}"><button data-a="q">検索</button></div>${rows || '<small>つながっている駅がありません</small>'}${extra}`, [['戻る', () => usvEdit(def, USV.draftNew, S)]]);
+  const ov = v5Open('停車駅を追加', `<canvas id="v5map" width="640" height="300" style="width:100%;height:auto;border-radius:8px;background:#0a0d12;touch-action:none"></canvas><small style="color:#8a93a3">地図の駅（緑＝選べる、灰＝線路がつながっていない）をタップ</small><div class="v5row"><input id="v5q" placeholder="駅名・路線名で絞り込み" value="${esc5(f)}"><button data-a="q">検索</button></div>${rows || '<small>つながっている駅がありません</small>'}${extra}`, [['戻る', () => usvEdit(def, USV.draftNew, S)]]);
+  usvMap(ov.querySelector('#v5map'), def, reach, (o) => (def.way.push({ ri: o.ri, ja: o.ja }), usvEdit(def, USV.draftNew, S)));
   ov.querySelector('[data-a="q"]').onclick = () => usvPick(def, S, ov.querySelector('#v5q').value);
   ov.querySelectorAll('button[data-i]').forEach((b) => {
     b.onclick = () => {
@@ -591,4 +592,54 @@ function usvList(S) {
       usvList(S);
     };
   });
+}
+
+// the picker's map: rails in grey, reachable stations green (tap to add), the rest grey, the last stop yellow; 30 km wide
+function usvMap(cv, def, reach, pick) {
+  if (!cv) return;
+  const c = cv.getContext('2d'), W5 = cv.width, H5 = cv.height, last = def.way[def.way.length - 1], r0 = W.rails[last.ri];
+  const st0 = r0 && r0.st.find((s) => s.ja === last.ja);
+  if (!st0) return;
+  let sc = W5 / 30000;
+  const ox = st0.x, oz = st0.z, X = (x) => W5 / 2 + (x - ox) * sc, Z = (z) => H5 / 2 + (z - oz) * sc;
+  const draw = () => {
+    c.fillStyle = '#0a0d12';
+    c.fillRect(0, 0, W5, H5);
+    c.lineWidth = 1;
+    for (const r of W.rails) {
+      c.strokeStyle = r.color || '#555';
+      c.globalAlpha = 0.45;
+      c.beginPath();
+      r.path.forEach((p, i) => (i % 4 && i !== r.path.length - 1 ? 0 : i ? c.lineTo(X(p[0]), Z(p[1])) : c.moveTo(X(p[0]), Z(p[1]))));
+      c.stroke();
+    }
+    c.globalAlpha = 1;
+    const ok = new Set(reach.map((o) => o.ri + '|' + o.ja));
+    for (let ri = 0; ri < W.rails.length; ri++)
+      for (const s of W.rails[ri].st || []) {
+        const x = X(s.x), z = Z(s.z);
+        if (x < -5 || z < -5 || x > W5 + 5 || z > H5 + 5) continue;
+        const g = ok.has(ri + '|' + s.ja);
+        c.fillStyle = g ? '#6be29a' : '#555b66';
+        c.beginPath();
+        c.arc(x, z, g ? 3.2 : 2, 0, 6.3);
+        c.fill();
+      }
+    def.way.forEach((w, i) => {
+      const r = W.rails[w.ri], s = r && r.st.find((q) => q.ja === w.ja);
+      s && ((c.fillStyle = i === def.way.length - 1 ? '#ffd23f' : '#ffffff'), c.beginPath(), c.arc(X(s.x), Z(s.z), 5, 0, 6.3), c.fill());
+    });
+  };
+  draw();
+  cv.onclick = (e) => {
+    const b = cv.getBoundingClientRect(), mx = ((e.clientX - b.left) / b.width) * W5, mz = ((e.clientY - b.top) / b.height) * H5;
+    let best = null, bd = 18;
+    for (const o of reach) {
+      const r = W.rails[o.ri], s = r.st.find((q) => q.ja === o.ja), d = Math.hypot(X(s.x) - mx, Z(s.z) - mz);
+      d < bd && ((bd = d), (best = o));
+    }
+    if (best) return pick(best);
+    // a grey station: say why it cannot be chosen
+    for (const r of W.rails) for (const s of r.st || []) if (Math.hypot(X(s.x) - mx, Z(s.z) - mz) < 10) return v5Err(`${s.ja}（${r.ja}）は線路がつながっていないため選べません`);
+  };
 }

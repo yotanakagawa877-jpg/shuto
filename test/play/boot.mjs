@@ -1,6 +1,6 @@
 // shared boot helper: iPhone landscape (844x390, touch), quality from Q (default low), returns {browser,page,log}
 import { chromium } from 'playwright';
-export async function boot({ url = process.env.URL || 'http://localhost:8780/index.html', q = process.env.Q || 'low', cont = false, page: pg0 } = {}) {
+export async function boot({ url = process.env.URL || 'http://localhost:8781/index.html', q = process.env.Q || 'low', cont = false, page: pg0 } = {}) {
   const browser = pg0 ? null : await chromium.launch({ headless: true, executablePath: process.env.PW_EXEC || '/opt/pw-browsers/chromium',
     args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--js-flags=--expose-gc', '--enable-precise-memory-info'] });
   let page = pg0;
@@ -15,6 +15,9 @@ export async function boot({ url = process.env.URL || 'http://localhost:8780/ind
   await page.goto(url);
   await page.waitForSelector('#tNew', { state: 'visible', timeout: 120000 });
   const t0 = Date.now();
+  // the title is in the HTML before game.js has run: つづきから is enabled by the script once it has looked for saves
+  cont && (await page.waitForFunction(() => !document.getElementById('tContinue').disabled && window.__G === void 0 ? !!document.getElementById('tContinue') : !document.getElementById('tContinue').disabled, null, { timeout: 120000 }).catch(() => {}));
+  cont && (await page.waitForTimeout(1500));
   await page.tap(cont ? '#tContinue' : '#tNew');
   await page.waitForTimeout(600);
   // v4.0: CONTINUE / NEW GAME open the save-slot list (slot 1 = first row)

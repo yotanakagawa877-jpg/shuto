@@ -439,5 +439,6 @@ SCEN.pause_probe = async (ctx) => {
   await ctx.page.tap('#pSave', { timeout: 5000 }).catch((e) => out.push('pSave ' + e.message.slice(0, 60))); await W8(ctx, 800);
   out.push(await ctx.page.isVisible('#v4ov'), await ctx.page.$$eval('#v4ov .row', (rs) => rs.map((r) => [r.textContent.trim().slice(0, 20), !!r.offsetParent])));
   await ctx.shot('pause_probe');
+  await ctx.page.evaluate(() => { const o = document.getElementById('v4ov'); o && (o.hidden = true); __G.pause(false); });
   return out;
 };

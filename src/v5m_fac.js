@@ -22,8 +22,10 @@ function facLabel(f) {
 }
 // the facility the player stands at (checked twice a second)
 function facAt() {
-  if ((FAC.t -= G.dt || 0.03) > 0) return FAC.near;
-  FAC.t = 0.5;
+  if (G.t - FAC.t < 0.5 && Math.hypot(P.x - (FAC.px || 0), P.z - (FAC.pz || 0)) < 4) return FAC.near;
+  FAC.t = G.t;
+  FAC.px = P.x;
+  FAC.pz = P.z;
   FAC.near = null;
   if (P.mode !== 'foot' || P.interior) return null;
   let best = null;

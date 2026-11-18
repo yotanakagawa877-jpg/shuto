@@ -230,6 +230,8 @@ V5S.npc_basic = async (ctx) => ctx.ev(async () => {
 // from the departure board of 新宿: ＋ 運行をつくる, add stops through the UI, odd names, save; then the API cases
 V5S.rail_create = async (ctx) => {
   const p = ctx.page, out = {};
+  // a menu left open by an earlier scenario would swallow the taps
+  await ctx.page.evaluate(() => { for (const id of ['v4ov', 'v5ov']) { const o = document.getElementById(id); o && (o.hidden = true); } document.getElementById('stmenu').hidden = true; __G.pause(false); });
   const inside = await ctx.ev(async () => { const S = T.st('新宿'); const e = S.entrances[0]; await T.tp(e.x, e.z, false); __G.P.x = e.x; __G.P.z = e.z; __G.interact(); T.sim(0.5); const inn = !!__G.P.interior; inn && __G.doAction('trains'); return inn; });
   out.inside = inside;
   await p.waitForSelector('#stmenu', { state: 'visible', timeout: 15000 }).catch(() => {});
@@ -361,8 +363,9 @@ V5S.mil_tank = async (ctx) => ctx.ev(async () => {
   if (tank) {
     g.P.x = tank.x + 3; g.P.z = tank.z; g.P.y = tank.y + 0.1; T.sim(0.2); g.PL.tryEnter();
     out.inTank = g.P.mode === 'car' && g.P.car === tank;
+    T.sim(0.1);
     out.ui = !document.getElementById('v5wpn').hidden && document.getElementById('v5w1').textContent;
-    M.b1 = true; T.sim(0.2); M.b1 = false; out.shells = M.shells.length; T.sim(3);
+    M.b1 = true; T.sim(0.1); M.b1 = false; out.shells = M.shells.length; T.sim(3); out.explodedNear = Math.round(Math.hypot(tank.x - g.P.x, tank.z - g.P.z));
     M.b2 = true; T.sim(0.5); M.b2 = false;
     g.KEYS.KeyW = true; T.sim(4); g.KEYS.KeyW = false; out.moved = Math.round(Math.hypot(tank.x - b.cx, tank.z - b.cz));
     T.drop(); out.out = g.P.mode;
@@ -457,7 +460,8 @@ V5S.land_layer = async (ctx) => ctx.ev(async () => {
   if (!L.g) return out;
   // a field cell near 久喜 / 加須 and an industrial cell near 京葉臨海
   const find = (v, x, z) => { const G2 = L.g; for (let r = 0; r < 120; r++) for (let a = 0; a < 16; a++) { const px = x + Math.cos(a * 0.39) * r * 32, pz = z + Math.sin(a * 0.39) * r * 32; if (X.luAt(px, pz) === v) return [px, pz]; } return null; };
-  for (const [name, v, x, z] of [['field', 1, -14000, -42000], ['greenhouse', 2, 30000, 15000], ['industry', 3, 24000, 3000]]) {
+  const GH = [17936, -13808];
+  for (const [name, v, x, z] of [['field', 1, -14000, -42000], ['greenhouse', 2, GH[0], GH[1]], ['industry', 3, 31212, 6657]]) {
     const q = find(v, x, z);
     if (!q) { out[name] = 'none'; continue; }
     await T.tp(q[0], q[1]); for (let i = 0; i < 12; i++) T.sim(0.6);
@@ -492,3 +496,39 @@ V5S.suburb_drive = async (ctx) => {
   const h1 = await ctx.heap();
   return { h0, h1, r };
 };
+// earthquake and typhoon events: force each once, nothing breaks, they end by themselves; achievements / news counters
+V5S.v5_events = async (ctx) => ctx.ev(async () => {
+  const g = __G, X = g.X, out = {};
+  T.drop(); await T.tp(-4867, -2166);
+  for (const kind of ['quake', 'ty']) {
+    const E = X.EVT; E.q = E.ty = null; E.t = 0;
+    const r = Math.random; Math.random = () => (kind === 'quake' ? 0.1 : 0.9);
+    T.sim(0.1); Math.random = r;
+    out[kind] = { started: !!(kind === 'quake' ? E.q : E.ty) };
+    let k = 0; while ((E.q || E.ty) && k++ < 240) T.sim(1);
+    out[kind].sec = k; out[kind].ended = !(E.q || E.ty);
+  }
+  out.news = X.NEWS.q.length; out.ach = g.X.V4 ? null : null;
+  return out;
+});
+V5S.save_probe = async (ctx) => ctx.ev(async () => {
+  const g = __G, out = {};
+  await T.tp(-2900, 1300);
+  try { out.len = JSON.stringify(g.G.stats).length; } catch (e) { out.stringify = e.message; }
+  const k = g.X.slotKey ? g.X.slotKey() : 'shuto2.save';
+  localStorage.removeItem(k);
+  g.saveGame(!0);
+  const v = localStorage.getItem(k);
+  out.key = k; out.saved = v ? v.length : null;
+  try { localStorage.setItem('x5test', 'x'.repeat(1000)); out.lsOk = true; localStorage.removeItem('x5test'); } catch (e) { out.lsErr = e.message; }
+  let tot = 0; for (let i = 0; i < localStorage.length; i++) { const kk = localStorage.key(i); tot += (localStorage.getItem(kk) || '').length; } out.lsTotal = tot; out.keys = localStorage.length;
+  return out;
+});
+V5S.corner_probe = async (ctx) => ctx.ev(async () => {
+  const g = __G, out = {};
+  await T.tp(-43749, -46567, false); T.sim(1);
+  const L = []; g.X.buildingsNear ? 0 : 0;
+  out.gu = g.AC.groundUnder(-43749, -46567, 50);
+  out.p = T.snap();
+  return out;
+});

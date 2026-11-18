@@ -190,3 +190,44 @@ small-street AI traffic, suburban infill, farmland / industry scenery, bases, bu
 - Tests: test/play/scen_v5.mjs (merged into SCEN by run.mjs), par.sh runs groups in parallel browsers, snap.sh freezes
   dist into a snapshot served on :8781 (tests use it, so rebuilding dist cannot break a booting test). run.mjs skips idle
   and missions unless named, 180 s limit per scenario (STUCK), boot fails fast on a boot error.
+- Car handling (v5m_car.js): grip / steering per type (HANDLE), snow and flat tyres lower grip, handbrake drift lasts
+  while sideways on throttle, suspension bounce on landing, body darkens with damage, rollover (v5Flip: hard side impact
+  or sliding sideways into a wall), T-bone spin. Walls: elevated decks are walled except inside the junction disc itself
+  (it used to open 6 m past it), the wall response slides along / scrapes / bounces head-on (v5WallResp); ground
+  motorways get outer walls; ground roads over water get bridge railings (v5AfterPhys).
+- NPC (v5m_npc.js): driver personalities (safe / normal / hasty / taxi / truck, night racers on expressways): gap, pace,
+  lane-change cool-down. Pedestrians: cower at gunfire, dodge cars, onlookers at crashes (one on the phone), dogs.
+  Small-street traffic: spawnAICar keeps ~35 % of spawns on tile streets within 250 m; tsUnloadTile frees AI cars on
+  the streets it unloads; b_ skips dead edges.
+- Rail creator (v5m_rail.js): railGraph() = stations + junctions (hops of the real services + track ends meeting another
+  track at the same height); Dijkstra per section; legs like world svc; ring service = one leg once round. Definitions in
+  G.stats.usv (saved per slot), run-time services in USV.list, trains tagged usv, cap V5_RAIL_CAP = 12. Departure
+  boards get 「＋ 運行をつくる」 and 一覧 (edit / copy / stop / share / delete). Share code SHUTO-RAIL1:<base64 JSON>.
+  Deleting the service of the train the player rides lets them off at the next station.
+- Military (v5m_mil.js + v5m_0data.js): bases from OSM (tools/v5/mil.py; 練馬 drawn from its footprint) built within
+  2.5 km (fence with gates where roads cross, watch towers, guards; equipment once the tiles are loaded: tanks, fighters,
+  attack helicopters, ships at 横須賀); fence blocks small steps across it (teleports pass); entering = ★4. Tank = car type
+  'tank' (CT, CR -> v5TankGeo) with a turret mesh; fighters = parked aircraft with fighter flag (flyPlane: thrust 30,
+  faster roll / pitch, lower stall, any surface); runways of 入間 / 横田 in MIL_RW. Weapons: right-edge buttons (#v5wpn).
+  ★5: up to 2 tanks hunting (shells), 2 fighters strafing (cannon, missiles at vehicles), 1 attack helicopter (rockets).
+- Facilities (v5m_fac.js + v5m_0amen.js from tools/v5/amen.py): police (自首, directions, 事件の手伝い chase), hospital
+  (treatment), fire station (fire engine / ambulance), town hall (area info, jobs, 転入届), library, post office (delivery
+  job), school. WASTED / BUSTED now go to the nearest hospital / police station on the whole map (v5Places).
+- Land layer (v5m_land.js, data/lu.bin from tools/v5/landuse.py + lulayer.py -> dist/data/lu.txt): fields (paddy / crop
+  rows by season from the real month, levees, farm lanes), greenhouses, industry (tanks, chimneys, containers, cranes)
+  in 256 m chunks within ~650 m, only on cells clear of roads / buildings / water.
+- Suburban infill (tools/v5/infill.py): ring tiles only; settlement = urban land use or >= 4 real buildings within ~56 m;
+  never on farmland / forest / water / parks; lots along streets, attributes copied from real buildings of the tile;
+  records appended (indices stable). +87,566 buildings; then bake (test/bake.py) + tools/ext/bake_ring.py (20 clears).
+- Extras (v5m_extra.js): 10 achievements, bases in 図鑑, radio news of game events, earthquake / typhoon events.
+- Rail creator picker: a 30 km map (tap a green station; grey = not connected, says why) above the list + search.
+- Not done (time): bus-route bake, fuel / dealers, 大黒 PA meet,
+  ring scenery (shrines / konbini outside the old frame), smoother narrow rivers, mall / danchi / mountain pass / fishing
+  port set pieces, pedestrians' time-of-day destinations, benches.
+
+### v5.0 final tests (2026-11-18)
+All scenarios except idle / missions (test/play/par.sh, 3 parallel browsers, 844x390 touch, low): 0 console errors,
+0 freezes. Two failures were harness problems and pass on rerun (boot.mjs defaulted to port 8780 instead of the snapshot
+8781 so a reload lost localStorage; a pause menu left open by pause_probe swallowed rail_create's taps).
+Heap after GC at the end of a group: 386–476 MB (v4.0: 383–409). Fields / industry chunks: ~6–11 MB more while in them.
+Screenshots: test/play/shots5.mjs (DSF=2).

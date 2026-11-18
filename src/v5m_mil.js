@@ -70,7 +70,7 @@ function v5Shell(c, tx, ty, tz, byPlayer) {
   const yaw = c.yaw + (c.tyaw || 0), sx = c.x + Math.sin(yaw) * 6, sz = c.z + Math.cos(yaw) * 6, sy = c.y + 2;
   let dx = tx - sx, dy = ty - sy, dz = tz - sz;
   const L = Math.hypot(dx, dy, dz) || 1;
-  MIL.shells.push({ x: sx, y: sy, z: sz, vx: (dx / L) * 260, vy: (dy / L) * 260, vz: (dz / L) * 260, t: 0, by: byPlayer });
+  MIL.shells.push({ x: sx, y: sy, z: sz, vx: (dx / L) * 260, vy: (dy / L) * 260, vz: (dz / L) * 260, t: 0, by: byPlayer, from: c });
   Ro(sx, sy, sz, 6);
   gt.boom && gt.boom(Math.hypot(sx - P.x, sz - P.z) * 0.5);
   G.cam.shake = Math.max(G.cam.shake || 0, byPlayer ? 0.5 : 0.2);
@@ -83,7 +83,7 @@ function v5ShellTick(dt) {
     const g = groundUnder(nx, nz, ny + 5).g, hitB = rayBuildings(s.x, s.y, s.z, nx, ny, nz) < 1;
     let hitCar = null;
     carsNear(nx, nz, 4, V5C);
-    for (const c of V5C) if (Math.abs((c.y || 0) + 1 - ny) < 2.5) hitCar = c;
+    for (const c of V5C) c !== s.from && !c.removed && Math.hypot(c.x - nx, c.z - nz) < c.td.L / 2 + 0.5 && Math.abs((c.y || 0) + 1 - ny) < 2.5 && (hitCar = c);
     if (ny <= g + 0.2 || hitB || hitCar || s.t > 3) {
       xt('explode', { x: nx, y: Math.max(g, ny), z: nz, big: !0, byPlayer: s.by });
       MIL.shells.splice(i, 1);
@@ -420,7 +420,8 @@ function v5WeaponsTick(dt) {
     if (b1 && MIL.fireT <= 0) {
       MIL.fireT = 2.4;
       const yaw = c.yaw + (c.tyaw || 0);
-      v5Shell(c, c.x + Math.sin(yaw) * 400, c.y + 1.5 + (G.cam.pitch || 0) * -200, c.z + Math.cos(yaw) * 400, !0);
+      // the gun stays nearly level: a little elevation when the camera looks up
+      v5Shell(c, c.x + Math.sin(yaw) * 400, c.y + 2.2 + It((0.3 - (G.cam.pitch || 0.3)) * 120, -8, 60), c.z + Math.cos(yaw) * 400, !0);
     }
     b2 && MIL.gunT <= 0 && ((MIL.gunT = 0.12), v5Gun(c.x, c.y + 2.6, c.z, c.yaw + (c.tyaw || 0), 0, 10));
   } else {
