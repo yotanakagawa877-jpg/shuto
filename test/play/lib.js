@@ -17,7 +17,7 @@ window.T = (() => {
       T.sim(0.5);
       return T.snap();
     },
-    drop() { const c = P.car; P.mode === 'car' && g.PL.tryEnter(); if (c && P.mode !== 'car') { try { g.V.freeCar(c); } catch (e) {} c.removed = true; } if (P.mode === 'car') { P.mode = 'foot'; } P.car = null; },
+    drop() { const c = P.car; if (c && P.mode === 'car') { c.vx = c.vz = 0; c.v = 0; } P.mode === 'car' && g.PL.tryEnter(); P.down = 0; P.sky = null; if (c && P.mode !== 'car') { try { g.V.freeCar(c); } catch (e) {} c.removed = true; } if (P.mode === 'car') { P.mode = 'foot'; } P.car = null; },
     // nearest ground road point (non-elevated), with its direction
     async roadPoint(x, z) {
       await T.tp(x, z);

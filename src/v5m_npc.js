@@ -72,10 +72,11 @@ function v5PedState(n, t, e) {
 var pedCars5 = [];
 // gunfire: the nearest crouch, the rest run (scarePeds already makes them flee)
 function v5Gunshot(x, z) {
-  pedsNear(x, z, 30, pedP5);
-  for (const p of pedP5) {
+  for (const p of G.peds) {
+    if (Math.abs(p.x - x) > 30 || Math.abs(p.z - z) > 30) continue;
     if (p.state === 'down' || p.kind === 4 || p.kind === 11 || p.state === 'cop' || p.state === 'attack') continue;
-    Math.random() < (Math.hypot(p.x - x, p.z - z) < 15 ? 0.55 : 0.3) && ((p.state = 'cower'), (p.t = rt(2.5, 5)));
+    if (p.state === 'cower') continue;
+    Math.random() < (Math.hypot(p.x - x, p.z - z) < 15 ? 0.7 : 0.35) && ((p.state = 'cower'), (p.t = rt(2.5, 5)));
   }
 }
 var pedP5 = [];
@@ -83,9 +84,9 @@ var pedP5 = [];
 function v5Crash(x, z, p) {
   if (p < 8 || (V5.crashT || 0) > G.t) return;
   V5.crashT = G.t + 6;
-  pedsNear(x, z, 45, pedP5);
   let phone = 0;
-  for (const q of pedP5) {
+  for (const q of G.peds) {
+    if (Math.hypot(q.x - x, q.z - z) > 45) continue;
     if (q.state !== 'walk' && q.state !== 'idle' && q.state !== 'wait') continue;
     if (q.kind === 4 || q.kind === 11 || Math.random() > 0.45) continue;
     q.state = 'gawk';

@@ -3815,6 +3815,9 @@ function tsUnloadTile(rec) {
     const B2a = A.filter((s) => !de.has(Math.floor(s / 4096)));
     B2a.length ? TS.grid.set(ck, B2a) : TS.grid.delete(ck);
   }
+  // v5.0: AI cars on (or about to turn into) the streets of this tile go with it
+  for (const c of G.cars)
+    !c.removed && c !== P.car && c.mode === 'ai' && ((c.e && de.has(c.e.i)) || (c.nx && c.nx[0] && de.has(c.nx[0].i)) || (c.jc && c.jc.f && de.has(c.jc.f.i))) && freeCar(c);
   for (const id of rec.edges) ((W.edges[id] = TS_DEADE), TS.freeE.push(id), TS.nE--);
   for (const id of rec.nodes) ((W.nodes[id] = TS_DEADN), TS.freeN.push(id), TS.nN--);
   (TS.tiles.delete(rec.k), TS.unloads++);
@@ -8876,7 +8879,7 @@ function flyPlane(n, t) {
     // rotate: pull back (S / stick down) above 62 m/s (≈220 km/h)
     n.pitch = n.v > (n.fighter ? 52 : 62) ? It(n.pitch + s * t * 0.7, -0.28, 0) : Ee(n.pitch, 0, t * 3);
     const surf = onRunway(n.x, n.z) || maskQ(n.x, n.z) === M_AIR;
-    !surf && n.v > 22 && ((n.v *= 1 - t * 1.5), (G.cam.shake = 0.3));
+    !surf && !n.fighter && n.v > 22 && ((n.v *= 1 - t * 1.5), (G.cam.shake = 0.3));
   } else {
     // v5.0: fighters roll and pitch faster
     n.pitch = It(n.pitch + s * t * 0.7 * auth * (n.fighter ? 1.7 : 1), -1, 1);
@@ -8898,7 +8901,8 @@ function flyPlane(n, t) {
   if (h.inside || n.y < h.g - 0.5) return Pf(n);
   if (n.y < 0.25) {
     const surf = onRunway(n.x, n.z) || maskQ(n.x, n.z) === M_AIR;
-    if (c < -7.5 || Math.abs(n.roll) > 0.4 || (!surf && n.v > 30) || maskQ(n.x, n.z) === M_WATER) return Pf(n);
+    // v5.0: fighters use military runways the airport code does not know
+    if (c < -7.5 || Math.abs(n.roll) > 0.4 || (!surf && !n.fighter && n.v > 30) || maskQ(n.x, n.z) === M_WATER) return Pf(n);
     (n.airborne && (xt('toast', `着陸成功　接地率 ${Math.round(-c * 196.85)} ft/min`), (n.airborne = !1)), (n.y = 0.25));
   } else n.y > 15 && !n.airborne && ((n.airborne = !0), xt('toast', '離陸！ Shift/Ctrl でスロットル、A/D で旋回'));
   // gear retracts above 150 m, comes down below 120 m
@@ -12723,6 +12727,7 @@ function b_(n) {
     s = Tg(t, n.dir);
   for (let a of e.edges) {
     let l = W.edges[a];
+    if (!l || l.dead) continue;
     if (l === t && e.edges.length > 1) continue;
     let f = l.a === e.i ? 1 : -1;
     if (l.ow && f < 0 && l !== t) continue;
@@ -13060,7 +13065,9 @@ function spawnAICar(n, t, e) {
   if ((roadsNear(n, t, 60, i), !i.length)) return null;
   let s = Be(i),
     o = s.e;
-  if (o.len < 20) return null;
+  if (o.len < 20 || o.dead) return null;
+  // v5.0 (approved): about a third of the traffic on the small streets of the streamed tiles, within 250 m
+  if (o.tile && (Math.random() > 0.35 || o.hw < 1.8 || Math.hypot(n - player_P.x, t - player_P.z) > 250)) return null;
   let r = W.nodes[o.a],
     a = W.nodes[o.b],
     l = It(s.s, r.r + 3, o.len - a.r - 3);
@@ -14142,7 +14149,8 @@ function updPed(n, t) {
       }
       (c > 1.1
         ? Of(n, e.x, e.z, n.state === 'cop' ? 5.6 : 5, t)
-        : (n.punchT || 0) <= 0 &&
+        : (n.state !== 'cop' || Ke() >= 2) && // v5.0: ★1 is a questioning, officers do not hit
+          (n.punchT || 0) <= 0 &&
           e.down <= 0 &&
           ((n.punchT = n.state === 'cop' ? 1.4 : 1.1), (n.swing = 0.4), G.hitPlayer && G.hitPlayer(n, n.state === 'cop' ? 7 : 5)),
         n.swing > 0 && (n.swing -= t));
@@ -20532,7 +20540,7 @@ function managePopulation(n, t) {
       G.cars.splice(h, 1);
       continue;
     }
-    if (d === player_P.car) continue;
+    if (d === player_P.car || d.mil) continue;
     let p = Math.hypot(d.x - player_P.x, d.z - player_P.z),
       x = d.ctl === 'police' || d.keep ? 360 : i + 90;
     if (p > x || d.sink > 4 || (d.mode === 'phys' && !d.ctl && p > 220 && !d.keep)) {
@@ -27716,7 +27724,7 @@ async function aw(n) {
       (G.diagF = 0),
       (ph = !1),
       (window.__G = {
-        X: { get STOPS() { return STOPS; }, get V4() { return V4; }, get V5() { return V5; }, get MIL() { return MIL; }, get MIL_DATA() { return MIL_DATA; }, prefAt, policeName, v5Roadblock, v5Gunshot, v5Crash, get DOGS() { return DOGS; }, get USV() { return USV; }, usvClean, usvBuild, usvRebuild, usvCode, usvParse, usvStart, usvList, usvReach, usvRaw, railGraph, get COASTERS() { return COASTERS; }, WHEELS, nearestStation, v4Interact, v4Prompt, v4DexMenu, v4AchMenu, v4SaveMenu, v4Talk, getSlot, slotKey, v4ApplySave, get SV() { return SV; }, TS, tsPrefetch, newCar, physCar, surfaceAt, edgePos, edgeY, roadsNear, get CT() { return CT; }, departMenu, MM2, svNextTrain, skipToDest, rideDestMenu, PB, XS, lg, DR, openBusMenu, rideBusDestMenu, skipBusTo },
+        X: { get STOPS() { return STOPS; }, get V4() { return V4; }, get V5() { return V5; }, get LUL() { return LUL; }, luAt, facNearest, v5FacPrompt, v5Places, get MIL() { return MIL; }, get MIL_DATA() { return MIL_DATA; }, prefAt, policeName, v5Roadblock, v5Gunshot, v5Crash, get DOGS() { return DOGS; }, get USV() { return USV; }, usvClean, usvBuild, usvRebuild, usvCode, usvParse, usvStart, usvList, usvReach, usvRaw, railGraph, get COASTERS() { return COASTERS; }, WHEELS, nearestStation, v4Interact, v4Prompt, v4DexMenu, v4AchMenu, v4SaveMenu, v4Talk, getSlot, slotKey, v4ApplySave, get SV() { return SV; }, TS, tsPrefetch, newCar, physCar, surfaceAt, edgePos, edgeY, roadsNear, get CT() { return CT; }, departMenu, MM2, svNextTrain, skipToDest, rideDestMenu, PB, XS, lg, DR, openBusMenu, rideBusDestMenu, skipBusTo },
         LM: LM,
         FIRE: FIRE,
         WP: WP,
@@ -28260,6 +28268,8 @@ function interact() {
     }
     if (v4Interact()) return;
     let e = nearDoor(P.x, P.z);
+    // v5.0: public facilities (when no door of a building is closer)
+    if (!e && v5FacInteract()) return;
     if (e) {
       e.act ? Jz(e) : e.type === 'deck' ? enterDeck(e) : e.type === 'property' ? offerProperty(e.prop) : enter(e);
       return;
@@ -29355,6 +29365,8 @@ function t7() {
   if (e) return t(`\u30DF\u30C3\u30B7\u30E7\u30F3\u300C${e.title}\u300D`);
   const v4p = v4Prompt();
   if (v4p) return t(v4p);
+  const v5p = !nearDoor(P.x, P.z) && v5FacPrompt();
+  if (v5p) return t(v5p);
   let i = nearStop(P.x, P.z);
   if (i && !nearDoor(P.x, P.z))
     return (
@@ -29559,9 +29571,11 @@ function n7() {
     ((o.x = o.home[0]), (o.y = o.home[1]), (o.z = o.home[2]), (o.spin = 0), o.m.position.set(o.x, o.y, o.z), o.m.rotation.set(0, 0, 0));
   }
   ((P.air = null), (P.mode = 'foot'), (P.hp = 100), (P.down = 0), (P.armor = 0), n.kind === 'busted' && loseWeapons(), resetPolice());
-  let i = n.places[0],
+  // v5.0: nearest hospital / police station on the whole map (the old lists are central Tokyo only)
+  const pl5 = v5Places(n.kind, t, e) || n.places;
+  let i = pl5[0],
     s = 1e18;
-  for (let o of n.places) {
+  for (let o of pl5) {
     let r = (o[0] - t) ** 2 + (o[1] - e) ** 2;
     r < s && ((s = r), (i = o));
   }
@@ -29599,6 +29613,8 @@ function i7(n) {
               ? ((V4.wx = 'fog'), (ic = rt(240, 420)))
               : ((ra = 0), (ic = rt(600, 1200)));
   }
+  // v5.0: a typhoon is heavy rain whatever the setting
+  typeof EVT !== 'undefined' && EVT.ty && ((ra = 1), (V4.wx = null));
   rn.uRain.value += It(ra - rn.uRain.value, -n * 0.05, n * 0.05);
 }
 var nw = 0,

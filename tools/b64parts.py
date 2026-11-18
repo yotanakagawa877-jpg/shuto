@@ -18,6 +18,9 @@ for fn in sorted(glob.glob('data/tiles/*.bin')):
     open('dist/data/t2/' + os.path.basename(fn)[:-4] + '.txt', 'w').write(b)
     tot += len(b)
 print('tiles', len(glob.glob('data/tiles/*.bin')), 'b64 MB', round(tot / 1e6, 1))
+if os.path.exists('data/lu.bin'):  # v5.0 land-use layer (fields / greenhouses / industry)
+    b = base64.b64encode(gzip.compress(open('data/lu.bin', 'rb').read(), 9)).decode()
+    open('dist/data/lu.txt', 'w').write(b); print('land use b64 KB', len(b) // 1000)
 if os.path.exists('data/startup.bin'):
     b = base64.b64encode(gzip.compress(open('data/startup.bin', 'rb').read(), 9)).decode()
     open('dist/data/startup.txt', 'w').write(b); print('startup snapshot b64 KB', len(b) // 1000)

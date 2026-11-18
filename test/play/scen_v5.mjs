@@ -31,7 +31,7 @@ V5S.police_stop = async (ctx) => ctx.ev(async () => {
   const g = __G, X = g.X, out = [];
   for (const s of [1, 3]) {
     await T.tp(-4867, -2166); g.G.heat = 0; T.sim(1);
-    const m0 = g.G.money; g.POL.forceStars(s);
+    g.G.money = 20000; const m0 = g.G.money; g.POL.forceStars(s);
     // an officer right next to the player
     const cop = g.PD && g.PD.spawnPedAt ? g.PD.spawnPedAt(g.P.x + 1.2, g.P.z, 'cop', 4) : null;
     cop && ((cop.state = 'cop'), (cop.t = 40));
@@ -62,37 +62,60 @@ V5S.police_dart = async (ctx) => ctx.ev(async () => {
   return out;
 });
 
-// car chase ★1..★5: no contact below ★3; PIT / box / roadblock with spikes at ★3+
+// car chase: ★1 a patrol behind must not touch; ★3 a PIT from behind spins the car; roadblock + spikes flatten tyres
 V5S.police_car = async (ctx) => ctx.ev(async () => {
-  const g = __G, X = g.X, out = [];
-  for (const s of [1, 3, 5]) {
-    await T.tp(-4867, -2166); g.G.heat = 0; T.sim(1);
-    T.carHere('sedan');
-    const st0 = { ...X.V5.stats, shots: X.V5.stats.shots.slice() }, hp0 = g.P.car ? g.P.car.hp : 0;
-    g.POL.forceStars(s); g.KEYS.KeyW = true;
-    let blocks = 0, flat = 0, minD = 1e9;
-    for (let k = 0; k < 50; k++) {
-      g.KEYS.KeyD = k % 6 === 0; T.sim(0.5);
-      blocks = Math.max(blocks, X.V5.blocks.length); g.P.car && g.P.car.flat && (flat = 1);
-      for (const c of g.G.cars) if (g.V.isCop(c) && c.ctl === 'police') minD = Math.min(minD, Math.hypot(c.x - g.P.x, c.z - g.P.z));
-      if (g.P.mode !== 'car') break;
-    }
-    // force a roadblock ahead for the spikes check
-    s >= 3 && g.P.mode === 'car' && X.v5Roadblock();
-    g.KEYS.KeyW = g.KEYS.KeyD = false;
-    out.push({ s, pit: X.V5.stats.pit - st0.pit, blocks: Math.max(blocks, X.V5.blocks.length), flat, minD: Math.round(minD), carHp: g.P.car ? Math.round(g.P.car.hp) : null, mode: g.P.mode, stars: Math.floor(g.G.heat) });
-    g.P.mode === 'car' && g.PL.tryEnter();
-    let k = 0; while ((X.V5.arrest || g.G.dying) && k++ < 40) T.sim(0.5);
+  const g = __G, X = g.X, out = {};
+  const setup = async (stars) => {
+    T.drop(); g.POL.resetPolice(); g.G.heat = 0;
+    const q = await T.roadPoint(-4867, -2166);
+    const yaw = Math.atan2(q.dx, q.dz);
+    const c = X.newCar('sedan', q.x, q.z, yaw, 'phys');
+    Object.assign(c, { y: 0.04, driver: !1, parked: !0 });
+    g.P.x = q.x + 1.5; g.P.z = q.z; g.V.rebuildCarGrid(); g.PL.tryEnter();
+    g.POL.forceStars(stars);
+    for (const k of g.G.cars) g.V.isCop(k) && k !== c && (k.removed || ((k.ctl = null), (k.x += 4000)));
+    const cop = X.newCar('police', q.x - q.dx * 14 - q.dz * 1.5, q.z - q.dz * 14 + q.dx * 1.5, yaw, 'phys');
+    Object.assign(cop, { y: 0.04, ctl: 'police', siren: !0, vx: q.dx * 18, vz: q.dz * 18 });
+    return { c, cop, q, yaw };
+  };
+  // ★1: player cruises at 14 m/s; the patrol follows without contact
+  {
+    const { c, cop, q, yaw } = await setup(1);
+    let minD = 1e9, hp0 = c.hp;
+    for (let k = 0; k < 60; k++) { c.yaw = yaw; c.vx = q.dx * 14; c.vz = q.dz * 14; T.sim(0.1); minD = Math.min(minD, Math.hypot(cop.x - c.x, cop.z - c.z)); }
+    out.s1 = { minD: Math.round(minD * 10) / 10, hpLoss: Math.round(hp0 - c.hp), entered: g.P.car === c };
   }
+  // ★3: the PIT role drives into the rear quarter
+  {
+    const { c, cop, q, yaw } = await setup(3);
+    cop.role = 'pit'; const p0 = X.V5.stats.pit;
+    let spun = 0;
+    for (let k = 0; k < 80; k++) { if (!spun) { c.vx = q.dx * 14; c.vz = q.dz * 14; c.yaw = yaw; } T.sim(0.1); Math.abs(c.spin || 0) > 0.3 && (spun = 1); if (X.V5.stats.pit > p0) spun = 1; }
+    out.s3 = { pit: X.V5.stats.pit - p0, spun };
+  }
+  // roadblock ahead + spike strip
+  {
+    const { c, q, yaw } = await setup(3);
+    c.vx = q.dx * 14; c.vz = q.dz * 14; T.sim(0.2);
+    const ok = X.v5Roadblock(); const b = X.V5.blocks[X.V5.blocks.length - 1];
+    out.block = { ok, cars: b ? b.cars.length : 0 };
+    if (b && b.spike) {
+      const sp = b.spike, back = 30;
+      c.x = sp.x - b.dx * back; c.z = sp.z - b.dz * back; c.yaw = Math.atan2(b.dx, b.dz);
+      for (let k = 0; k < 40 && !c.flat; k++) { c.vx = b.dx * 12; c.vz = b.dz * 12; c.yaw = Math.atan2(b.dx, b.dz); T.sim(0.1); }
+      out.block.flat = !!c.flat;
+    }
+  }
+  T.drop(); g.POL.resetPolice(); g.G.heat = 0;
   return out;
 });
-
 // escaping: open street vs under a flyover vs inside a building vs a different car (★2)
 V5S.police_hide = async (ctx) => ctx.ev(async () => {
   const g = __G, X = g.X, out = {};
   const run = async (name, setup) => {
     await T.tp(-4867, -2166); g.G.heat = 0; T.sim(0.5);
     await setup(); g.POL.forceStars(2);
+    if (name === 'swapcar') { T.sim(2); const old = g.P.car; T.drop(); T.carHere('compact'); }
     // remove the patrols so nobody sees the player, then time the escape
     for (const c of g.G.cars) g.V.isCop(c) && (c.removed || ((c.ctl = null), (c.siren = !1), (c.x += 3000)));
     let t = 0; while (g.G.heat >= 1 && t < 120) { T.sim(1); t++; }
@@ -104,7 +127,7 @@ V5S.police_hide = async (ctx) => ctx.ev(async () => {
     const e = g.W.edges.find((e) => e && e.elev && e.kind === 'X' && Math.hypot(g.W.nodes[e.a].x + 4867, g.W.nodes[e.a].z + 2166) < 4000);
     if (e) { const q = g.X.edgePos ? g.X.edgePos(e, e.len / 2, {}) : null; q && (await T.tp(q.x, q.z, false), (g.P.x = q.x), (g.P.z = q.z), (g.P.y = 0.2)); }
   });
-  await run('swapcar', async () => { T.carHere('sedan'); T.sim(1); g.PL.tryEnter(); T.sim(0.5); });
+  await run('swapcar', async () => { T.carHere('sedan'); });
   return out;
 });
 
@@ -117,8 +140,11 @@ V5S.car_barrier = async (ctx) => ctx.ev(async () => {
     for (const [ang, sp] of [[0.35, 30], [0.8, 22], [1.3, 18]]) {
       const q = g.X.edgePos(e, e.len / 2, {}), y = g.X.edgeY(e, e.len / 2);
       await g.X.tsPrefetch(q.x, q.z);
-      T.drop(); g.P.x = q.x; g.P.z = q.z; g.P.y = y + 0.3; T.carHere('sedan', Math.atan2(q.dx, q.dz));
-      const c = g.P.mode === 'car' && g.P.car; if (!c) { res.push('no car'); continue; }
+      T.drop();
+      const c = g.X.newCar('sedan', q.x, q.z, Math.atan2(q.dx, q.dz), 'phys'); if (!c) { res.push('no car'); continue; }
+      Object.assign(c, { y: y + 0.1, driver: !1, parked: !0 });
+      g.P.x = q.x + 1.5; g.P.z = q.z; g.P.y = y + 0.3; g.V.rebuildCarGrid && g.V.rebuildCarGrid(); g.PL.tryEnter();
+      if (g.P.mode !== 'car' || g.P.car !== c) { res.push('not entered'); c.removed = !0; continue; }
       const yaw = Math.atan2(q.dx, q.dz) + ang;
       Object.assign(c, { x: q.x, z: q.z, y: y + 0.1, yaw, vx: Math.sin(yaw) * sp, vz: Math.cos(yaw) * sp });
       let minY = 1e9, maxOff = 0;
@@ -142,9 +168,9 @@ V5S.car_drift = async (ctx) => ctx.ev(async () => {
     Object.assign(c, { vx: Math.sin(c.yaw) * 22, vz: Math.cos(c.yaw) * 22 });
     g.KEYS.KeyW = true; T.sim(0.3); g.KEYS.KeyD = true; g.KEYS.Space = true; let mx = 0;
     for (let k = 0; k < 8; k++) { T.sim(0.1); mx = Math.max(mx, Math.abs(c.lat || 0)); }
-    g.KEYS.Space = false; for (let k = 0; k < 8; k++) { T.sim(0.1); mx = Math.max(mx, Math.abs(c.lat || 0)); }
+    g.KEYS.Space = false; let after = 0; for (let k = 0; k < 8; k++) { T.sim(0.1); after = Math.max(after, Math.abs(c.lat || 0)); }
     g.KEYS.KeyD = false; g.KEYS.KeyW = false;
-    out.push({ wx, maxLat: Math.round(mx * 10) / 10, v: Math.round(Math.hypot(c.vx, c.vz)), yaw: Math.round(c.yaw * 100) / 100 });
+    out.push({ wx, hand: Math.round(mx * 10) / 10, after: Math.round(after * 10) / 10, v: Math.round(Math.hypot(c.vx, c.vz)), yaw: Math.round(c.yaw * 100) / 100 });
     T.drop(); T.sim(0.5);
   }
   g.X.V4.snow = 0; g.X.V4.wx = null;
@@ -320,14 +346,17 @@ V5S.mil_tank = async (ctx) => ctx.ev(async () => {
   out.built = !!(M.built && M.built.b === b);
   out.gates = M.built ? M.built.gates.length : 0;
   // walk to a gate and in
+  out.cars = M.built ? M.built.cars.map((c) => c.t) : null;
   const q = M.built && M.built.gates[0];
   if (q) {
-    g.P.x = q.x + Math.sin(q.a + Math.PI / 2) * 12; g.P.z = q.z + Math.cos(q.a + Math.PI / 2) * 12; T.sim(0.5);
-    for (let k = 0; k < 30; k++) { g.P.x += (q.x - g.P.x) * 0.15; g.P.z += (q.z - g.P.z) * 0.15; T.sim(0.1); }
-    g.P.x = b.cx; g.P.z = b.cz; T.sim(1);
+    // from 15 m outside the gate to 40 m inside, 1 m per step
+    const nx = b.cx - q.x, nz = b.cz - q.z, L = Math.hypot(nx, nz), ux = nx / L, uz = nz / L;
+    for (let d = -15; d <= 40; d += 1) { g.P.x = q.x + ux * d; g.P.z = q.z + uz * d; T.sim(0.05); }
+    T.sim(1);
   }
   out.stars = Math.floor(g.G.heat);
   const tank = M.built && M.built.cars.find((c) => c.t === 'tank' && !c.removed);
+  tank && (out.tankAt = [Math.round(tank.x - b.cx), Math.round(tank.z - b.cz)]);
   out.tank = !!tank;
   if (tank) {
     g.P.x = tank.x + 3; g.P.z = tank.z; g.P.y = tank.y + 0.1; T.sim(0.2); g.PL.tryEnter();
@@ -356,7 +385,9 @@ V5S.mil_jet = async (ctx) => ctx.ev(async () => {
   const f = M.built && M.built.air.find((a) => a.fighter);
   out.fighter = !!f;
   if (!f) return out;
-  g.P.x = f.x + 4; g.P.z = f.z; g.P.y = f.y; T.sim(0.3); g.PL.tryEnter();
+  g.P.x = f.x + 4; g.P.z = f.z; g.P.y = f.y; T.sim(0.3);
+  out.near = g.G.aircraft.filter((a) => a.kind === 'parked' && Math.hypot(a.x - g.P.x, a.z - g.P.z) < 30).map((a) => [a.fighter ? 'F' : 'p', Math.round(Math.hypot(a.x - g.P.x, a.z - g.P.z))]);
+  out.fkind = f.kind; g.PL.tryEnter();
   out.mode = g.P.mode; out.isFighter = !!(g.P.air && g.P.air.fighter);
   g.KEYS.ShiftLeft = true; T.sim(14); g.KEYS.KeyS = true; T.sim(3); g.KEYS.KeyS = false; T.sim(10); g.KEYS.ShiftLeft = false;
   const a = g.P.air; out.alt = a && Math.round(a.y); out.kmh = a && Math.round(a.v * 3.6);
@@ -385,3 +416,79 @@ V5S.mil_wanted5 = async (ctx) => ctx.ev(async () => {
   out.left = { jets: M.jets.length, ahs: M.ahs.length };
   return out;
 });
+
+// ---------- public facilities: police station (自首), hospital (治療), WASTED goes to the nearest hospital
+V5S.fac_basic = async (ctx) => {
+  const p = ctx.page, out = {};
+  const r = await ctx.ev(async () => {
+    const g = __G, X = g.X, o = {};
+    T.drop(); g.POL.resetPolice(); g.G.heat = 0;
+    const S = T.st('大宮');
+    const f = X.facNearest('po', S.x, S.z, 4000, (n) => !n.endsWith('|k'));
+    o.po = f && { name: f.name, d: Math.round(f.d) };
+    if (f) { await T.tp(f.x, f.z, false); g.P.x = f.x + 4; g.P.z = f.z; T.sim(1.2); o.prompt = X.v5FacPrompt(); g.G.money = 50000; g.POL.forceStars(2); T.sim(0.2); g.interact(); }
+    return o;
+  });
+  Object.assign(out, r);
+  await W8(ctx, 500);
+  out.rows = await p.$$eval('#v4ov .row', (rs) => rs.filter((x) => x.offsetParent).map((x) => x.textContent.slice(0, 24))).catch(() => []);
+  await p.locator('#v4ov .row', { hasText: '自首' }).locator('button').first().tap({ timeout: 8000 }).catch((e) => (out.e1 = e.message.slice(0, 60)));
+  out.after = await ctx.ev(() => ({ stars: Math.floor(__G.G.heat), money: __G.G.money }));
+  const h = await ctx.ev(async () => {
+    const g = __G, X = g.X, o = {};
+    const f = X.facNearest('ho', g.P.x, g.P.z, 6000);
+    o.ho = f && { name: f.name, d: Math.round(f.d) };
+    // WASTED here: where do we wake up?
+    g.P.hp = 0; g.HUD && 0; X.v5Places && (o.place = X.v5Places('wasted', g.P.x, g.P.z));
+    o.placeD = o.place && Math.round(Math.hypot(o.place[0][0] - g.P.x, o.place[0][1] - g.P.z));
+    g.P.hp = 100;
+    return o;
+  });
+  Object.assign(out, h);
+  await p.locator('#v4ov .close').tap({ timeout: 3000 }).catch(() => {});
+  return out;
+};
+// fields / greenhouses / industry around the player in the outer ring; narrow-street traffic in a suburb
+V5S.land_layer = async (ctx) => ctx.ev(async () => {
+  const g = __G, X = g.X, L = X.LUL, out = {};
+  T.drop();
+  let k = 0; while (!L.g && k++ < 60) { T.sim(0.5); await new Promise((r) => setTimeout(r, 200)); }
+  out.loaded = !!L.g;
+  if (!L.g) return out;
+  // a field cell near 久喜 / 加須 and an industrial cell near 京葉臨海
+  const find = (v, x, z) => { const G2 = L.g; for (let r = 0; r < 120; r++) for (let a = 0; a < 16; a++) { const px = x + Math.cos(a * 0.39) * r * 32, pz = z + Math.sin(a * 0.39) * r * 32; if (X.luAt(px, pz) === v) return [px, pz]; } return null; };
+  for (const [name, v, x, z] of [['field', 1, -14000, -42000], ['greenhouse', 2, 30000, 15000], ['industry', 3, 24000, 3000]]) {
+    const q = find(v, x, z);
+    if (!q) { out[name] = 'none'; continue; }
+    await T.tp(q[0], q[1]); for (let i = 0; i < 12; i++) T.sim(0.6);
+    let meshes = 0; for (const [, c] of L.chunks) c.g && meshes++;
+    out[name] = { at: q.map(Math.round), chunks: L.chunks.size, meshes, heap: Math.round(performance.memory.usedJSHeapSize / 1e6) };
+  }
+  // drive through a field
+  await T.tp(-14000, -42000); T.carHere('keitora'); g.KEYS.KeyW = true; T.sim(8); g.KEYS.KeyW = false; out.drive = T.snap(); T.drop();
+  return out;
+});
+V5S.street_traffic = async (ctx) => ctx.ev(async () => {
+  const g = __G, out = {};
+  T.drop(); await T.tp(-33000, 3500); T.sim(20);
+  const ai = g.G.cars.filter((c) => c.mode === 'ai' && !c.removed);
+  out.ai = ai.length; out.onStreets = ai.filter((c) => c.e && c.e.tile).length; out.dead = ai.filter((c) => c.e && c.e.dead).length;
+  // leave: tiles unload, nothing may be left on a dead street
+  await T.tp(-4867, -2166); T.sim(10);
+  out.deadAfter = g.G.cars.filter((c) => !c.removed && c.mode === 'ai' && c.e && c.e.dead).length;
+  return out;
+});
+// long drive round the outer ring (streamdrive style) with heap readings
+V5S.suburb_drive = async (ctx) => {
+  const h0 = await ctx.heap();
+  const r = await ctx.ev(async () => {
+    const g = __G, res = [];
+    for (const [x, z] of [[-38000, 2000], [-40000, 30000], [-20000, 44000], [10000, 46000], [36000, 30000], [38000, -10000], [30000, -40000], [-10000, -44000], [-36000, -30000]]) {
+      await T.tp(x, z); for (let i = 0; i < 6; i++) T.sim(0.6);
+      res.push([x, z, g.X.TS.tiles.size, g.X.TS.packs.size, g.X.LUL.chunks.size, Math.round(performance.memory.usedJSHeapSize / 1e6)]);
+    }
+    return res;
+  });
+  const h1 = await ctx.heap();
+  return { h0, h1, r };
+};

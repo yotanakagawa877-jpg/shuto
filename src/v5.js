@@ -61,8 +61,10 @@ function policeAI(n, t) {
       tx = tg.x + side * sx * 4 + fx * (n.role === 'box' ? 5 : -5); tz = tg.z + side * sz * 4 + fz * (n.role === 'box' ? 5 : -5);
       vdes = Math.max(0, Math.hypot(tx - n.x, tz - n.z) * 0.6);
     } else if (n.role === 'pit') {
-      tx = tg.x - fx * 2.4 + side * sx * 0.9; tz = tg.z - fz * 2.4 + side * sz * 0.9;
-      vdes = vp + It(Math.hypot(tx - n.x, tz - n.z) * 0.7, 0, 9);
+      // line up beside the rear wheel, then turn in across it
+      const dT = Math.hypot(tg.x - fx * 1.8 + side * sx * 2.2 - n.x, tg.z - fz * 1.8 + side * sz * 2.2 - n.z);
+      dT > 3 ? ((tx = tg.x - fx * 1.8 + side * sx * 2.2), (tz = tg.z - fz * 1.8 + side * sz * 2.2)) : ((tx = tg.x - fx * 1.2), (tz = tg.z - fz * 1.2));
+      vdes = vp + It(dT * 0.7, 1, 9);
     } else if (n.role === 'box') {
       const ahead = 3 + vp * 0.15;
       tx = tg.x + fx * ahead + side * sx * 2.4; tz = tg.z + fz * ahead + side * sz * 2.4;
@@ -118,7 +120,7 @@ function v5CarHit(n, r, sp, bx, bz) {
   // where on the player's car was it hit? rear quarter (local forward < -0.5 L/4) from the side
   const fx = Math.sin(pl.yaw), fz = Math.cos(pl.yaw), lx = cop.x - pl.x, lz = cop.z - pl.z;
   const ax = lx * fx + lz * fz, lat = lx * -fz + lz * fx;
-  if (ax < -pl.td.L * 0.15 && Math.abs(lat) > pl.td.W * 0.3) {
+  if (ax < pl.td.L * 0.1 && Math.abs(lat) > pl.td.W * 0.15) {
     V5.stats.pit++;
     pl.spin = (pl.spin || 0) + Math.sign(lat) * Math.min(3.2, 0.8 + sp * 0.25);
     xt('toast', 'PIT で回された！');
@@ -162,9 +164,9 @@ var CONE_GEO = null, CONE_MAT = null, SPIKE_GEO = null, SPIKE_MAT = null;
 function v5Roadblock() {
   const t = il(), sp = Math.hypot(t.vx || 0, t.vz || 0);
   if (sp < 6 || P.mode !== 'car') return !1;
-  const ex = (t.vx || 0) / sp, ez = (t.vz || 0) / sp, ax = t.x + ex * 240, az = t.z + ez * 240, L = [];
-  roadsNear(ax, az, 50, L);
-  const a = L.filter((h) => !h.e.elev && h.e.kind !== 'L' && h.e.kind !== 'X' && h.e.kind !== 'R').sort((h, d) => h.d - d.d)[0];
+  const ex = (t.vx || 0) / sp, ez = (t.vz || 0) / sp, ax = t.x + ex * 200, az = t.z + ez * 200, L = [];
+  roadsNear(ax, az, 80, L);
+  const a = L.filter((h) => !h.e.elev && !h.e.dead && h.e.kind !== 'X' && h.e.kind !== 'R' && h.e.hw >= 2.8).sort((h, d) => h.d - d.d)[0];
   if (!a) return !1;
   const e = a.e, p = edgePos(e, a.s, {}), dx = p.dx, dz = p.dz, nx = dz, nz = -dx, hw = e.hw;
   const yaw = Math.atan2(nx, nz), blk = { x: p.x, z: p.z, t: 60, cars: [], cones: null, spike: null, nx, nz, dx, dz, hw };
@@ -290,6 +292,9 @@ function v5Tick(dt) {
   usvTick(dt);
   v5DogsTick();
   v5MilTick(dt);
+  v5FacTick(dt);
+  v5LandTick(dt);
+  v5ExtraTick(dt);
   // spinning player car after a PIT
   for (const c of G.cars)
     if (c.spin && c.mode === 'phys') {

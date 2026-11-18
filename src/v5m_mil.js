@@ -204,9 +204,13 @@ function milBuild(b) {
     const p = spawnPedAt(q.x + Math.cos(q.a) * (q.w + 1.5), q.z - Math.sin(q.a) * (q.w + 1.5), 'cop', 11);
     p && ((p.state = 'idle'), (p.t = 1e9), (p.guard = 1), built.peds.push(p));
   }
-  // parked equipment on open ground inside
+  // parked equipment and ships: placed once the tiles inside are loaded (buildings known), see milTick
+  built.pending = !0;
+  return built;
+}
+function milEquip(built) {
+  const b = built.b, kind = b.kind;
   const spots = milSpots(b, 14);
-  const kind = b.kind;
   let k = 0;
   const take = () => spots[k++];
   if (kind === 'gsdf' || kind === 'gsdf_air')
@@ -249,9 +253,7 @@ function milBuild(b) {
       G.aircraft.push(a);
       built.air.push(a);
     }
-  // ships at 横須賀
   if (kind === 'navy') built.ships = milShips(b);
-  return built;
 }
 // open ground inside the base: not in a building, not on water, flat
 function milSpots(b, n) {
@@ -271,7 +273,14 @@ function milSpots(b, n) {
   return out;
 }
 // the base's runway for a fighter take-off (the airfield of W.fun if it is there, else along the longest open line)
+// runways of the air bases that are not in W.fun (lat, lng, heading of the runway as a unit vector, length)
+var MIL_RW = { iruma: [35.842, 139.4105, 0.03, 1, 2000], yokota: [35.7485, 139.3485, 0.0, 1, 3350] };
 function milRunway(b) {
+  const r = MIL_RW[b.key];
+  if (r) {
+    const [x, z] = fe(r[0], r[1]), L = Math.hypot(r[2], r[3]);
+    return { x, z, ux: r[2] / L, uz: -r[3] / L, len: r[4], w: 45 };
+  }
   if (W.fun)
     for (const af of W.fun.af) {
       const rw = af.rw && af.rw[0];
@@ -335,11 +344,14 @@ function milTick(dt) {
   }
   const bt = MIL.built;
   if (!bt) return;
+  bt.pending && Math.hypot(bt.b.cx - P.x, bt.b.cz - P.z) < 1600 && v4TileReady(bt.b.cx, bt.b.cz) && ((bt.pending = !1), milEquip(bt));
   // fence: no way through except the gates (on foot and by car); aircraft fly over it
   const tgt = P.mode === 'car' && P.car ? P.car : P.mode === 'foot' && !P.interior ? P : null;
   if (tgt) {
     const inside = inRing(bt.b.ring, tgt.x, tgt.z);
-    if (MIL.inside !== null && inside !== MIL.inside && !(P.mode === 'car' && P.car.t === 'tank')) {
+    // a small step across the line is crossing the fence; a jump (teleport, respawn, taxi skip) is not
+    const step = MIL.last ? Math.hypot(tgt.x - MIL.last[0], tgt.z - MIL.last[1]) : 99;
+    if (MIL.inside !== null && inside !== MIL.inside && step < 12 && !(P.mode === 'car' && P.car.t === 'tank')) {
       const gate = bt.gates.some((q) => Math.hypot(q.x - tgt.x, q.z - tgt.z) < q.w + 2);
       if (!gate && MIL.last) {
         tgt.x = MIL.last[0];
@@ -355,6 +367,7 @@ function milTick(dt) {
       MIL.intrT = G.t + 40;
       forceStars(Math.max(4, Ke()));
       xt('toast', `${bt.b.name}に侵入した！ 手配度 ★4`);
+      news(`${bt.b.name}に不審者が侵入`);
       for (const p of bt.peds) ((p.state = 'cop'), (p.t = 60));
     }
   }
@@ -505,7 +518,7 @@ function milEnemyJet() {
 }
 function milJetTick(j, dt) {
   const p = il(), py = p.y || 0;
-  if (j.hp <= 0 && !j.dead) ((j.dead = !0), xt('explode', { x: j.x, y: j.y, z: j.z, big: !0, byPlayer: !0 }), xt('toast', `${MILNAME.fighter}を撃墜した！`));
+  if (j.hp <= 0 && !j.dead) ((j.dead = !0), xt('explode', { x: j.x, y: j.y, z: j.z, big: !0, byPlayer: !0 }), xt('toast', `${MILNAME.fighter}を撃墜した！`), s5().down++, news('自衛隊機が墜落。原因を調査中'));
   if (j.dead) {
     j.y -= 60 * dt;
     j.x += Math.sin(j.yaw) * 80 * dt;
@@ -550,7 +563,7 @@ function milEnemyAh() {
 }
 function milAhTick(h, dt) {
   const p = il(), py = p.y || 0;
-  if (h.hp <= 0 && !h.dead) ((h.dead = !0), xt('explode', { x: h.x, y: h.y, z: h.z, big: !0, byPlayer: !0 }), xt('toast', `${MILNAME.ah}を撃墜した！`));
+  if (h.hp <= 0 && !h.dead) ((h.dead = !0), xt('explode', { x: h.x, y: h.y, z: h.z, big: !0, byPlayer: !0 }), xt('toast', `${MILNAME.ah}を撃墜した！`), s5().down++, news('攻撃ヘリが墜落'));
   if (h.dead) {
     h.y -= 25 * dt;
     h.m.rotation.y += dt * 5;

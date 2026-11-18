@@ -553,6 +553,7 @@ function usvSave() {
   usvRebuild();
   v5Close();
   toast(`「${d.name || d.type + ' ' + d.way[d.way.length - 1].ja + '行き'}」の運行を始めました`);
+  news(`新しい列車「${d.name || d.type}」${d.way[0].ja}〜${d.way[d.way.length - 1].ja}で運行開始`);
   v4Stats();
   USV.editS ? departMenu(USV.editS) : usvList();
 }
