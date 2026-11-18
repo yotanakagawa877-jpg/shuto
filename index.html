@@ -7,6 +7,21 @@ body.tpOn #prompt{display:none}
 /* v4.0: toasts step below the MISSION PASSED / FAILED caption */
 body.touch.bigOn #toast{top:calc(206px + var(--sat))}
 body.bigOn #toast{top:calc(200px + var(--sat))}
+/* v5.0 vehicle weapons: right edge, above the action buttons (never centre / lower centre) */
+#v5wpn{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));top:calc(118px + var(--sat));display:flex;flex-direction:row;gap:10px;z-index:5}#v5wpn[hidden]{display:none}#v5wpn button{width:82px;height:44px;border-radius:22px;background:rgba(200,30,30,.78);color:#fff;font:800 13px var(--f-b);border:2px solid rgba(255,255,255,.4);touch-action:none}
+/* v5.0 editor panels (運行をつくる) */
+#v5ov .panel{width:min(720px,94vw);max-height:88vh;padding:14px 16px}#v5ov h2{margin:0 0 8px}
+.v5sec{margin:12px 0 6px;color:#ffd23f;font:800 12px var(--f-b);letter-spacing:.06em}
+.v5grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.v5grid label{display:flex;flex-direction:column;gap:3px;font:700 11px var(--f-b);color:#aab3c2}
+.v5p input,.v5p select,.v5p textarea{font:600 14px var(--f-b);color:#fff;background:#161b26;border:1px solid var(--rule);border-radius:6px;padding:7px 8px;min-height:34px;box-sizing:border-box;width:100%}
+.v5p input[type=color]{padding:2px;height:34px}.v5p input[type=checkbox]{width:auto;min-height:0;margin:0 6px 0 0}
+.v5row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}.v5row input{flex:1;min-width:140px}.v5row input[type=checkbox],.v5tg input{flex:0 0 auto;min-width:0;width:auto}.v5p input:disabled{opacity:.45}
+.v5p button{padding:8px 12px;border-radius:6px;background:rgba(255,255,255,.08);font:800 12px var(--f-b);color:#fff}
+.v5way{display:flex;flex-wrap:wrap;gap:6px}.v5chip{background:#161b26;border:1px solid var(--rule);border-radius:16px;padding:5px 10px;font:800 13px var(--f-b)}.v5chip small{margin-left:6px;color:#8a93a3;font-weight:500}
+.v5stops{display:flex;flex-wrap:wrap;gap:6px 12px;max-height:160px;overflow:auto}.v5tg{display:flex;align-items:center;font:700 13px var(--f-b)}
+.v5no{opacity:.55;padding:6px 10px;border:1px dashed var(--rule);border-radius:6px;margin-bottom:6px}.v5no small{display:block;color:#ff9a8a}
+.v5f{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;position:sticky;bottom:-14px;background:#0c0f16;padding:8px 0}.v5f .v5ok{background:#ffd23f;color:#111}
 </style></head><body>
 <meta charset="utf-8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#07080c">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="SHUTO"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">
@@ -175,7 +190,7 @@ body.touch.flyOn #prompt{top:calc(272px + var(--sat))}
 <div class="ov" id="title">
   <div class="tw">
     <div><div class="logo"><h1>SHUTO</h1><div class="hanko">首<br>都</div></div>
-      <p class="tag"><b>実在の東京を走る、飛ぶ、乗る、撃つ。</b>久喜・川越から鎌倉・横須賀、八王子から千葉・佐倉まで。横浜・湾岸千葉・大宮・鎌倉湘南の新ストーリー、観覧車やジェットコースター、競馬、遊覧飛行も。新幹線・特急・快速・急行と直通運転、JR・私鉄・地下鉄80路線以上（電車の運転も可能）、路線バス、タクシー、水上バス。バイクや船、武器屋、改造ショップ、物件購入、スマホ、ラジオ、展望台、競馬・パチンコ、大学・学校、ライブ会場や博物館、銭湯や居酒屋、街の神社や商店街も。<small style="display:block;margin-top:6px;color:#8a93a3">v4.0 首都圏ストーリー ・ 地図データ © OpenStreetMap contributors</small></p></div>
+      <p class="tag"><b>実在の東京を走る、飛ぶ、乗る、撃つ。</b>久喜・川越から鎌倉・横須賀、八王子から千葉・佐倉まで。自分だけの列車の運行をつくれる鉄道路線作成モード、警察の追跡と検問、戦車・戦闘機と自衛隊基地、田んぼや工業地帯、交番・病院・役所も。横浜・湾岸千葉・大宮・鎌倉湘南の新ストーリー、観覧車やジェットコースター、競馬、遊覧飛行も。新幹線・特急・快速・急行と直通運転、JR・私鉄・地下鉄80路線以上（電車の運転も可能）、路線バス、タクシー、水上バス。バイクや船、武器屋、改造ショップ、物件購入、スマホ、ラジオ、展望台、競馬・パチンコ、大学・学校、ライブ会場や博物館、銭湯や居酒屋、街の神社や商店街も。<small style="display:block;margin-top:6px;color:#8a93a3">v5.0 ・ 地図データ © OpenStreetMap contributors</small></p></div>
     <div class="menu">
       <button class="big pri" id="tContinue">CONTINUE<small>つづきから</small></button>
       <button class="big" id="tNew">NEW GAME<small>はじめから（渋谷から）</small></button>
