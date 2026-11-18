@@ -82,8 +82,8 @@ function v4Menu(title, rows, closeText, onClose) {
   ov.hidden = !1;
 }
 function v4MenuOpen() {
-  const ov = document.getElementById('v4ov');
-  return !!(ov && !ov.hidden);
+  const ov = document.getElementById('v4ov'), o5 = document.getElementById('v5ov');
+  return !!((ov && !ov.hidden) || (o5 && !o5.hidden));
 }
 // apply a save object to a running game (title -> CONTINUE after the world was already built)
 function v4ApplySave(o) {

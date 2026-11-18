@@ -19,7 +19,14 @@ export async function boot({ url = process.env.URL || 'http://localhost:8780/ind
   await page.waitForTimeout(600);
   // v4.0: CONTINUE / NEW GAME open the save-slot list (slot 1 = first row)
   if (await page.isVisible('#v4ov')) await page.tap('#v4ov .v4l .row:first-child button');
-  await page.waitForFunction(() => window.__G && __G.G && __G.G.started, null, { timeout: 900000, polling: 1000 });
+  // wait for the world; give up at once on a boot error (it used to wait the full 15 minutes)
+  for (let i = 0; ; i++) {
+    if (await page.evaluate(() => !!(window.__G && __G.G && __G.G.started)).catch(() => !1)) break;
+    const be = log.errors.find((e) => /BOOT|PAGEERROR/.test(e));
+    if (be) throw new Error('boot failed: ' + be.slice(0, 300));
+    if (i > 450) throw new Error('boot timeout');
+    await page.waitForTimeout(2000);
+  }
   log.bootSec = (Date.now() - t0) / 1000;
   return { browser, page, log };
 }

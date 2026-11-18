@@ -171,3 +171,22 @@ v4Prompt / v4Talk / slotKey / getSlot and uses V4, COASTERS, CHAPTERS, ACH).
 - Headless Chrome (SwiftShader) runs at ~2 fps, so captions/toasts and real-time waits look long in tests; judge timing on a phone.
 - New probes: taxi_probe, race_probe, weather_probe, pause_probe.
 - Open proposals needing approval (performance): bake bus routes, AI traffic on narrow streets, ambient scenery across the whole map.
+
+## v5.0 (2026-11-18, in progress)
+Code: src/v5.js (police, wanted level, hooks), src/v5_pref.js (prefecture raster), src/v5m_0data.js (military areas),
+src/v5m_car.js (handling, barriers, rollover, damage), src/v5m_npc.js (driver personalities, pedestrians, dogs),
+src/v5m_rail.js (鉄道路線作成モード), src/v5m_mil.js (tanks, fighters, attack helicopters, bases, ships).
+bundle.sh: game.js + v4.js + v5_pref.js + v5.js + v5m_*.js (sorted). Data tools: tools/v5/pref.py, mil.py, amen.py.
+The user approved every performance proposal (2026-11-18: "承認は全てあなたの判断に任せます"): custom trains <= 12,
+small-street AI traffic, suburban infill, farmland / industry scenery, bases, bus-route bake. v3.9 memory measures stay.
+- Police: policeAI (v5.js) replaces the near-range driving (old one = policeAI0 for routing). On foot: stop 10–12 m
+  short, officers get out and run; never into a pedestrian. In a car below ★3: follow, no contact; ★3+: roles pit / box /
+  chase (PIT spin via v5CarHit). Bumping a patrol car: 0 / 0.35 / 0.8 / 1.3 heat by impact speed; one incident adds at
+  most ~1.25 stars (v5CapHeat). Hiding (under a flyover, building, tunnel) speeds the evade timer; switching cars while
+  unseen adds evade time. ★1 = 職務質問 (fine), ★3+ roadblocks with cars, cones and a spike strip (flat tyres), ★4 riot
+  police + helicopter, ★5 SDF + tanks + fighters + attack helicopter. No shooting below ★3 or with a bystander in the
+  line of fire (v5CopMayShoot). Arrest scene (確保) before BUSTED. Police names by prefecture (prefAt / policeName).
+- Name clash to remember: game.js had a minified function V5 (shop sign) — renamed mkShop5.
+- Tests: test/play/scen_v5.mjs (merged into SCEN by run.mjs), par.sh runs groups in parallel browsers, snap.sh freezes
+  dist into a snapshot served on :8781 (tests use it, so rebuilding dist cannot break a booting test). run.mjs skips idle
+  and missions unless named, 180 s limit per scenario (STUCK), boot fails fast on a boot error.

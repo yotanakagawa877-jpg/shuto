@@ -17,6 +17,16 @@ window.T = (() => {
       T.sim(0.5);
       return T.snap();
     },
+    drop() { const c = P.car; P.mode === 'car' && g.PL.tryEnter(); if (c && P.mode !== 'car') { try { g.V.freeCar(c); } catch (e) {} c.removed = true; } if (P.mode === 'car') { P.mode = 'foot'; } P.car = null; },
+    // nearest ground road point (non-elevated), with its direction
+    async roadPoint(x, z) {
+      await T.tp(x, z);
+      const L = []; g.X.roadsNear(P.x, P.z, 40, L);
+      const o = L.filter((h) => !h.e.elev).sort((a, b) => a.d - b.d)[0];
+      if (!o) return { x: P.x, z: P.z, dx: 0, dz: 1 };
+      const q = g.X.edgePos(o.e, o.s, {});
+      return { x: q.x, z: q.z, dx: q.dx, dz: q.dz, e: o.e };
+    },
     sim(sec, dt = 1 / 30) { const n = Math.round(sec / dt); for (let i = 0; i < n; i++) { g.sim(1, dt); T.watch(); } return G.t; },
     gy(x, z, y = 500) { try { return g.AC.groundUnder(x, z, y).g; } catch (e) { return NaN; } },
     snap() {

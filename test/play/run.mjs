@@ -2,9 +2,13 @@
 import fs from 'fs';
 import { boot, heap } from './boot.mjs';
 import { SCEN } from './scenarios.mjs';
+import { V5S } from './scen_v5.mjs';
+Object.assign(SCEN, V5S);
 const only = process.argv[2] ? process.argv[2].split(',') : null;
+// v5.0: idle (long idle) and missions (full play-through) are not part of the default run; name them to run them
+const SKIP = only ? [] : (process.env.SKIP ?? 'idle,missions').split(',');
 const OUT = process.env.SHOTDIR || '/tmp/shots'; fs.mkdirSync(OUT, { recursive: true });
-const { browser, page, log } = await boot();
+const { browser, page, log } = await boot({ url: process.env.URL || 'http://localhost:8781/index.html' });
 console.log('BOOT', log.bootSec, 's  heap', await heap(page), 'MB');
 const lib = fs.readFileSync(new URL('./lib.js', import.meta.url), 'utf8');
 await page.evaluate(lib);
@@ -12,12 +16,12 @@ const results = [];
 const ctx = { page, log, OUT, heap: () => heap(page), shot: (n) => page.screenshot({ path: `${OUT}/${n}.png`, timeout: 120000 }).catch(() => {}),
   ev: (f, a) => page.evaluate(f, a), lib, browser };
 for (const [name, fn] of Object.entries(SCEN)) {
-  if (only && !only.includes(name)) continue;
+  if ((only && !only.includes(name)) || SKIP.includes(name)) continue;
   log.tag = name; const e0 = log.errors.length; const t0 = Date.now();
   await page.evaluate(() => { T.issues = []; T.reset(); });
   let out, err = null;
-  try { out = await Promise.race([fn(ctx), new Promise((_, rej) => setTimeout(() => rej(new Error('scenario timeout')), (+process.env.STO || 900) * 1000))]); }
-  catch (e) { err = String(e && e.message || e).slice(0, 500); }
+  try { out = await Promise.race([fn(ctx), new Promise((_, rej) => setTimeout(() => rej(new Error('scenario timeout')), (+process.env.STO || 180) * 1000))]); }
+  catch (e) { err = String(e && e.message || e).slice(0, 500); if (/scenario timeout/.test(err)) err = 'STUCK (詰まり): ' + err; }
   let issues = [], st = null;
   try { issues = await page.evaluate(() => T.issues); st = await page.evaluate(() => T.snap()); } catch (e) { err = (err || '') + ' | page dead: ' + e.message; }
   // freeze check: does the render loop still advance?

@@ -8836,6 +8836,7 @@ function startPlane(n) {
       thr: 0,
       gear: !0,
       crashed: !1,
+      fighter: !!n.fighter,
     };
   return ((n.kind = 'player'), i);
 }
@@ -8873,20 +8874,21 @@ function flyPlane(n, t) {
     n.yaw += r * t * It(n.v / 8, 0, 1) * 0.8 + o * t * It(n.v / 8, 0, 1) * 0.5 * (n.v < 30 ? 1 : 0.3);
     n.roll = Ee(n.roll, 0, t * 4);
     // rotate: pull back (S / stick down) above 62 m/s (≈220 km/h)
-    n.pitch = n.v > 62 ? It(n.pitch + s * t * 0.7, -0.28, 0) : Ee(n.pitch, 0, t * 3);
+    n.pitch = n.v > (n.fighter ? 52 : 62) ? It(n.pitch + s * t * 0.7, -0.28, 0) : Ee(n.pitch, 0, t * 3);
     const surf = onRunway(n.x, n.z) || maskQ(n.x, n.z) === M_AIR;
     !surf && n.v > 22 && ((n.v *= 1 - t * 1.5), (G.cam.shake = 0.3));
   } else {
-    n.pitch = It(n.pitch + s * t * 0.7 * auth, -1, 1);
-    n.roll = It(n.roll + o * t * 1.6 * auth, -1.35, 1.35);
+    // v5.0: fighters roll and pitch faster
+    n.pitch = It(n.pitch + s * t * 0.7 * auth * (n.fighter ? 1.7 : 1), -1, 1);
+    n.roll = It(n.roll + o * t * 1.6 * auth * (n.fighter ? 1.8 : 1), -1.35, 1.35);
     Math.abs(o) < 0.05 && (n.roll = Ee(n.roll, 0, t * 0.9)); // wings level by themselves
     Math.abs(s) < 0.05 && Math.abs(n.pitch) < 0.95 && (n.pitch = Ee(n.pitch, -0.04, t * 0.45)); // gentle trim towards a shallow climb
     n.yaw += ((9.8 * Math.tan(n.roll)) / Math.max(40, n.v)) * t * -1 + r * t * 0.2;
     // v3.4: much faster — level top speed about 920 km/h at full throttle (thrust 14, drag 0.000165 v²)
-    n.v += (n.thr * 14 - 0.000165 * n.v * n.v - (n.gear ? 0.00012 * n.v * n.v : 0) + 9.8 * Math.sin(n.pitch)) * t;
+    n.v += (n.thr * (n.fighter ? 30 : 14) - 0.000165 * n.v * n.v - (n.gear ? 0.00012 * n.v * n.v : 0) + 9.8 * Math.sin(n.pitch)) * t;
     n.v = Math.max(20, n.v);
   }
-  let a = n.v < 58,
+  let a = n.v < (n.fighter ? 42 : 58),
     l = Math.sin(n.yaw) * Math.cos(n.pitch),
     f = Math.cos(n.yaw) * Math.cos(n.pitch),
     c = -Math.sin(n.pitch) * n.v;
@@ -12044,6 +12046,8 @@ var CT = {
       name: '\u6D88\u9632\u8ECA',
       col: [13638684],
     },
+    // v5.0: tank (parody name), only spawned by v5m_mil.js (w: 0 keeps it out of traffic)
+    tank: { L: 9.4, W: 3.3, H: 2.35, wb: 6, r: 0.6, vmax: 19, acc: 4.5, w: 0, name: '\u4E00\u4E5D\u5F0F\u6226\u8ECA\u300C\u30CF\u30AC\u30CD\u300D', col: [0x4f5a3a] },
     sdf: {
       L: 6.84,
       W: 2.48,
@@ -12204,6 +12208,7 @@ function CR(n) {
     };
   if (t.bike) return zR(n, t, e, a, l, f);
   if (n === 'ambulance' || n === 'fire') return PR(n, t, e, a, l, f);
+  if (n === 'tank') return v5TankGeo(t, e, a);
   if (n === 'sdf') {
     let u = t.L,
       c = t.W,
@@ -12541,6 +12546,8 @@ function initVehicles() {
                 ? 6
                 : t === 'sdf'
                   ? 10
+                  : t === 'tank'
+                  ? 6
                   : t === 'polbike'
                     ? 12
                     : CT[t].bike
@@ -12563,7 +12570,7 @@ function initVehicles() {
   ((Oi.count = 0), R.scene.add(Oi), Ai.scale.set(1, 1, 1));
 }
 var Oi = null,
-  isCop = (n) => n.t === 'police' || n.t === 'riot' || n.t === 'polbike' || n.t === 'sdf';
+  isCop = (n) => n.t === 'police' || n.t === 'riot' || n.t === 'polbike' || n.t === 'sdf' || (n.t === 'tank' && !n.mil);
 function newCar(n, t, e, i, s, o) {
   let r = Vr[n];
   if (!r.free.length) return null;
@@ -12944,7 +12951,7 @@ function aiUpdate(n, t) {
     if (c < 45) {
       let h = n.obst,
         d = h ? (h.mode === 'ai' ? h.v : Math.hypot(h.vx, h.vz)) : 0,
-        p = Math.max(0, c - 2.2),
+        p = Math.max(0, c - (n.gap || 2.2)),
         x = h ? Math.max(0, d) + (p - 1.2 * n.v) * 0.6 : 0,
         m = s;
       if (
@@ -12955,7 +12962,7 @@ function aiUpdate(n, t) {
       ) {
         for (let g of [n.lane - 1, n.lane + 1])
           if (!(g < 0 || g >= e.lanes) && BR(n, laneOff(e, n.dir, g))) {
-            ((n.lane = g), (n.lcT = 4), (n.blink = g > n.lane ? -1 : 1));
+            ((n.lane = g), (n.lcT = n.lcMin || 4), (n.blink = g > n.lane ? -1 : 1));
             break;
           }
       }
@@ -13072,6 +13079,7 @@ function spawnAICar(n, t, e) {
       (c.lo = laneOff(o, f, u)),
       (c.v = rt(5, 11)),
       (c.temper = rt(0.88, 1.12)),
+      v5Persona(c),
       (c.y = o.elev ? edgeY(o, l) : 0.04),
       c)
     : null;
@@ -13182,7 +13190,7 @@ function physCar(n, t) {
     let y = (n.ai || npcDrive)(n, t);
     ((i = y[0]), (s = y[1]), (o = y[2]));
   } else o = -1;
-  (n.dead || n.hp <= 0 || n.sink) && ((i = 0), (s = 0), (o = -1));
+  (n.dead || n.hp <= 0 || n.sink || n.flip) && ((i = 0), (s = 0), (o = -1));
   let a = Math.sin(n.yaw),
     l = Math.cos(n.yaw),
     f = -l,
@@ -13197,11 +13205,12 @@ function physCar(n, t) {
       : o > 0 && (c > 0.4 ? (c = Math.max(0, c - 22 * o * t)) : (c = Math.max(-14, c - 7 * o * t))),
     (c -= c * 0.08 * t),
     !i && !o && (c -= Math.sign(c) * Math.min(Math.abs(c), 0.8 * t)));
-  let p = n.air ? 0 : r ? 1 : (n.ctl ? 7 : 9) * (1 - rn.uRain.value * 0.35);
+  // v5.0: grip per car type, snow, flat tyres, drift (v5m_car.js)
+  let p = n.air ? 0 : r ? 1 : v5Grip(n, (n.ctl ? 7 : 9) * (1 - rn.uRain.value * 0.35));
   ((h *= Math.exp(-p * t)), r && !n.air && (c -= Math.sign(c) * Math.min(Math.abs(c), 5 * t)), (n.vx = a * c + f * h), (n.vz = l * c + u * h));
   let x = Math.abs(c),
     m = Ee(2.1, 0.75, It(x / 50, 0, 1));
-  (n.air || (n.yaw -= s * m * It(c / 6, -1, 1) * (r ? 1.5 : 1) * t),
+  (n.air || (n.yaw -= s * m * It(c / 6, -1, 1) * (r ? 1.5 : 1) * v5Steer(n, r) * t),
     (n.x += n.vx * t),
     (n.z += n.vz * t),
     (n.v = c),
@@ -13213,7 +13222,8 @@ function physCar(n, t) {
     M = g.y;
     let y = g.r,
       _ = y.e.hw - e.W / 2 - 0.15,
-      v = Math.min(y.s, y.e.len - y.s) < W.nodes[y.s < y.e.len / 2 ? y.e.a : y.e.b].r + 6,
+      // v5.0: the wall is open only inside the junction disc itself (it used to open 6 m past it, where cars slipped off)
+      v = ((N0) => Math.hypot(n.x - N0.x, n.z - N0.z) < (N0.r || 8) + 1.5)(W.nodes[y.s < y.e.len / 2 ? y.e.a : y.e.b]),
       b = !1;
     if (y.d > _) {
       for (let w of Qa)
@@ -13226,8 +13236,8 @@ function physCar(n, t) {
       let w = (n.x - y.x) / (y.d || 1),
         E = (n.z - y.z) / (y.d || 1);
       ((n.x -= w * (y.d - _)), (n.z -= E * (y.d - _)));
-      let C = n.vx * w + n.vz * E;
-      C > 0 && ((n.vx -= w * C * 1.3), (n.vz -= E * C * 1.3), C > 4 && Sg(n, C));
+      // v5.0: slide along the parapet, scrape, bounce only on a head-on hit
+      v5WallResp(n, w, E, 'deck');
     }
   }
   if (
@@ -13259,6 +13269,7 @@ function physCar(n, t) {
     }
     v > 3 && Sg(n, v);
   }
+  v5AfterPhys(n, t);
   !n.sink && n.y < 1 && isWaterAt(n.x, n.z) && !GR(n) && ((n.sink = 1), n.ctl === 'player' && xt('splash'));
 }
 function GR(n) {
@@ -13343,6 +13354,7 @@ function carCollisions(n) {
         let C = (n.vx - r.vx) * b + (n.vz - r.vz) * w;
         if (C < 0) {
           let S = (-1.3 * C) / 2;
+          v5CarHit(n, r, -C, b, w);
           if (((n.vx += b * S), (n.vz += w * S), (r.vx -= b * S), (r.vz -= w * S), -C > 3)) {
             (damageCar(n, -C * 1.1),
               damageCar(r, -C * 1.4),
@@ -13363,9 +13375,11 @@ function carCollisions(n) {
                 });
             n.ctl === 'player' &&
               (isCop(r)
-                ? xt('crime', {
-                    amt: 1.5,
+                ? v5CopBumpAmt(-C) > 0 &&
+                  xt('crime', {
+                    amt: v5CopBumpAmt(-C),
                     why: '\u30D1\u30C8\u30AB\u30FC\u306B\u885D\u7A81',
+                    minor: -C < 7,
                   })
                 : -C > 9 &&
                   xt('crime', {
@@ -13379,7 +13393,8 @@ function carCollisions(n) {
   }
   n.collDone = !0;
 }
-function policeAI(n, t) {
+// v5.0: the near-range police driving is in v5.js (policeAI); this one still routes them from afar
+function policeAI0(n, t) {
   let e = G.player,
     i = e.mode === 'car' && e.car ? e.car : e,
     s = G.polTier || {},
@@ -13488,10 +13503,10 @@ function renderCars(n, t) {
           Math.min(1, n * 3.5),
         )));
     } else
-      ((s.pitch = Ee(s.pitch, It(r * 0.006, -0.05, 0.05), Math.min(1, n * 6))),
-        (s.roll = Ee(s.roll, It((s.lat || 0) * 0.02, -0.07, 0.07), Math.min(1, n * 6))));
+      ((s.pitch = Ee(s.pitch, It(r * 0.006, -0.05, 0.05) + (s.susp || 0) * 0.2, Math.min(1, n * 6))),
+        (s.roll = s.flip ? s.flip.r * s.flip.dir : Ee(s.roll, It((s.lat || 0) * 0.02, -0.07, 0.07), Math.min(1, n * 6))));
     if (
-      (Ai.position.set(s.x, s.y + (s.sink ? -s.sink * 0.8 : 0), s.z),
+      (Ai.position.set(s.x, s.y + (s.sink ? -s.sink * 0.8 : 0) + (s.susp || 0) + (s.flip ? (1 - Math.cos(s.flip.r)) * s.td.H * 0.5 + Math.sin(s.flip.r) * s.td.W * 0.5 : 0), s.z),
       Ai.rotation.set(s.pitch, s.yaw, s.roll, 'YXZ'),
       Ai.updateMatrix(),
       o.m.setMatrixAt(s.slot, Ai.matrix),
@@ -14052,6 +14067,8 @@ function Of(n, t, e, i, s) {
 function updPed(n, t) {
   n.punchT > 0 && (n.punchT -= t);
   let e = G.player;
+  // v5.0: cower / dodge / onlooker states (v5m_npc.js)
+  if (v5PedState(n, t, e)) return;
   switch (n.state) {
     case 'down': {
       if (
@@ -14114,7 +14131,7 @@ function updPed(n, t) {
             (n.aim = 0.6),
             d > 16 && Of(n, h.x, h.z, 2.2, t),
             (n.shootT = (n.shootT ?? rt(0.4, 1.2)) - t),
-            n.shootT <= 0 && ((n.shootT = rt(0.8, 1.5) * (Ke() >= 5 ? 0.7 : 1)), G.copShoot(n)));
+            n.shootT <= 0 && ((n.shootT = rt(0.8, 1.5) * (Ke() >= 5 ? 0.7 : 1)), v5CopMayShoot(n, h.x, h.y || 0, h.z) && G.copShoot(n)));
           return;
         }
       }
@@ -14304,10 +14321,10 @@ function renderPeds() {
     let t = P0[n.kind];
     (Ls.position.set(n.x, n.y + (n.state === 'down' ? 0.12 : 0), n.z),
       n.state === 'down' ? Ls.rotation.set(-Math.PI / 2, n.yaw, 0, 'YXZ') : Ls.rotation.set(0, n.yaw, 0, 'XYZ'),
-      Ls.scale.setScalar(n.sc),
+      n.state === 'cower' ? Ls.scale.set(n.sc, n.sc * 0.62, n.sc) : Ls.scale.setScalar(n.sc),
       Ls.updateMatrix(),
       t.m.setMatrixAt(n.slot, Ls.matrix));
-    let e = n.state === 'walk' || n.state === 'cross' || n.state === 'board' || (n.state === 'fireman' && !n.spray),
+    let e = n.state === 'walk' || n.state === 'cross' || n.state === 'board' || n.state === 'gawk' || n.state === 'dodge' || (n.state === 'fireman' && !n.spray),
       i = n.state === 'flee' || n.state === 'attack' || n.state === 'cop',
       s = t.w.array,
       o = n.slot * 4;
@@ -14835,9 +14852,10 @@ function crime(n, t, e) {
     o = jp[t] || -99;
   if (G.t - o < 4) return;
   if (((jp[t] = G.t), policeSees(Math.max(70, TIER[s].see || 70)))) {
-    let l = s;
+    let l = s, h0 = G.heat;
     ((G.heat = Math.min(5.99, Math.max(G.heat, s >= 1 ? G.heat : 0) + n)),
       G.heat >= 1 && l === 0 && (G.heat = Math.max(G.heat, 1)),
+      v5CapHeat(h0),
       (G.evade = 0),
       Jg(),
       Ke() > l && k_(l, t));
@@ -14863,7 +14881,7 @@ function crime(n, t, e) {
 }
 function k_(n, t) {
   let e = Ke();
-  (n === 0 ? xt('toast', `\u624B\u914D\u3055\u308C\u307E\u3057\u305F\uFF1A${t}`) : xt('toast', `\u624B\u914D\u5EA6 ${'\u2605'.repeat(e)}`),
+  (n === 0 ? xt('toast', `${policeName(P.x, P.z)}\u306B\u624B\u914D\u3055\u308C\u307E\u3057\u305F\uFF1A${t}`) : xt('toast', `\u624B\u914D\u5EA6 ${'\u2605'.repeat(e)}`),
     gt.blip());
 }
 function Jg() {
@@ -15049,13 +15067,13 @@ function updatePolice(n) {
   if (((Yg -= n), Yg <= 0 && s.length < i.cars && t.mode !== 'plane' && t.mode !== 'boat')) {
     Yg = e >= 4 ? 1.2 : 2;
     let d = YR(
-      e >= 5 && Math.random() < 0.45 ? 'sdf' : e >= 5 && Math.random() < 0.35 ? 'riot' : e <= 3 && Math.random() < 0.3 ? 'polbike' : 'police',
+      e >= 5 && Math.random() < 0.45 ? 'sdf' : e >= 4 && Math.random() < 0.3 ? 'riot' : e <= 3 && Math.random() < 0.3 ? 'polbike' : 'police',
     );
     (d && d.t === 'sdf' && ((d.hp = 320), (d.armor = 0.45), Kg || ((Kg = !0), xt('toast', '\u81EA\u885B\u968A\u304C\u51FA\u52D5\u3057\u305F\uFF01'))),
       e < 5 && (Kg = !1),
       d && (d.boost = i.boost));
   }
-  (i.block && (($g -= n), $g <= 0 && t.mode === 'car' && (($g = 28), KR())),
+  (i.block && (($g -= n), $g <= 0 && t.mode === 'car' && (($g = 28), v5Roadblock() || KR())),
     P_(n, i.heli),
     HELI.on &&
       HELI.track &&
@@ -15063,6 +15081,7 @@ function updatePolice(n) {
       G.npcShoot &&
       ((HELI.shootT = (HELI.shootT || 3) - n),
       HELI.shootT <= 0 &&
+        v5CopMayShoot(HELI, il().x, 0, il().z) &&
         ((HELI.shootT = rt(2.2, 3.5)),
         G.npcShoot(HELI.x, HELI.y - 2, HELI.z, 0.22, 10, '\u8B66\u5BDF\u30D8\u30EA\u306E\u72D9\u6483\u624B\u306B\u6483\u305F\u308C\u305F'))));
   let o = il(),
@@ -15091,7 +15110,7 @@ function updatePolice(n) {
     c = s.some((d) => Math.hypot(d.x - f.x, d.z - f.z) < 7.5 && Math.abs(d.y - (f.y || 0)) < 2),
     h = r && G.peds.some((d) => (d.kind === 4 || d.kind === 11) && d.state === 'cop' && Math.hypot(d.x - t.x, d.z - t.z) < 1.8);
   (c || h || G.bustBoat) && u && t.mode !== 'train' && t.mode !== 'plane' && t.mode !== 'heli'
-    ? ((G.bust += n * (h ? 1.3 : 1)), G.bust > 3 && xt('busted'))
+    ? ((G.bust += n * (h ? 1.3 : 1)), G.bust > 3 && v5Busted())
     : (G.bust = Math.max(0, G.bust - n * 0.7));
 }
 function resetPolice() {
@@ -19559,6 +19578,7 @@ function i6(n, t, e, i) {
     why: '\u767A\u7832',
   }),
     scarePeds(n.x, n.z, 45),
+    v5Gunshot(n.x, n.z),
     INV.clip[e] <= 0 && (INV.ammo[e] || 0) > 0 && S3(e));
 }
 function S3(n) {
@@ -19691,6 +19711,7 @@ function npcShoot(n, t, e, i, s, o) {
 }
 G.npcShoot = npcShoot;
 G.copShoot = (n) => {
+  V5.stats.shots[Ke()]++;
   let t = G.player,
     e = Math.sin(n.yaw),
     i = Math.cos(n.yaw),
@@ -20603,7 +20624,7 @@ function carPedHits(n) {
     if (Math.abs(h) < a && Math.abs(c) < l && e > 4 && Math.abs(player_P.y - n.y) < 1.4) {
       let d = n.mode === 'ai' ? i * n.v : n.vx,
         p = n.mode === 'ai' ? s * n.v : n.vz;
-      (knockPlayer(d * 0.8, Math.min(8, e * 0.4), p * 0.8, e * 2.2), n.mode === 'ai' && (n.v *= 0.4));
+      (isCop(n) && V5.stats.runOver++, knockPlayer(d * 0.8, Math.min(8, e * 0.4), p * 0.8, e * 2.2), n.mode === 'ai' && (n.v *= 0.4));
     }
   }
 }
@@ -25428,7 +25449,7 @@ function hh(n, t, e, i, s, o, r, a, l, f) {
     );
   return (x.position.set(r, a, l), (x.rotation.y = f), R.scene.add(x), LM.emissive.push([x.material, 1.1, 0.3]), G5.set(u, x.material), x);
 }
-function V5(n, t, e, i, s, o, r, a) {
+function mkShop5(n, t, e, i, s, o, r, a) {
   let l = Ez(n, t);
   if (!l) return null;
   let f = Math.atan2(l.nx, l.nz),
@@ -26549,7 +26570,7 @@ function initGTA(n) {
   ((xe = n), Lz(), Rz());
   for (let [r, a, l] of Tz) {
     let [f, u] = B5(r, a),
-      c = V5(f, u, 'ARMS-NATION', `\u30A2\u30FC\u30E0\u30BA\u30FB\u30CD\u30FC\u30B7\u30E7\u30F3 ${l}\u5E97`, '#1a1a1a', '#ff3c2a', 'gun');
+      c = mkShop5(f, u, 'ARMS-NATION', `\u30A2\u30FC\u30E0\u30BA\u30FB\u30CD\u30FC\u30B7\u30E7\u30F3 ${l}\u5E97`, '#1a1a1a', '#ff3c2a', 'gun');
     c &&
       G.mapIcons.push({
         x: c.x,
@@ -26774,7 +26795,7 @@ function initGTA(n) {
       let c = (a * 2.39 + u * 2.1) % 6.283,
         h = 70 + u * 35,
         d = t[(a * 3 + u * 7) % t.length],
-        p = V5(r.x + Math.cos(c) * h, r.z + Math.sin(c) * h, d[1], d[2], d[3], d[4], d[0], {
+        p = mkShop5(r.x + Math.cos(c) * h, r.z + Math.sin(c) * h, d[1], d[2], d[3], d[4], d[0], {
           brand: d[1],
         });
       p &&
@@ -26849,7 +26870,7 @@ function initGTA(n) {
   }
   for (let r of PROPS) {
     let [a, l] = B5(r.ll[0], r.ll[1]),
-      f = V5(
+      f = mkShop5(
         a,
         l,
         r.name.split(' ')[0] + ' \u7269\u4EF6',
@@ -27695,7 +27716,7 @@ async function aw(n) {
       (G.diagF = 0),
       (ph = !1),
       (window.__G = {
-        X: { get STOPS() { return STOPS; }, get V4() { return V4; }, get COASTERS() { return COASTERS; }, WHEELS, nearestStation, v4Interact, v4Prompt, v4DexMenu, v4AchMenu, v4SaveMenu, v4Talk, getSlot, slotKey, v4ApplySave, get SV() { return SV; }, TS, tsPrefetch, newCar, physCar, surfaceAt, edgePos, edgeY, roadsNear, get CT() { return CT; }, departMenu, MM2, svNextTrain, skipToDest, rideDestMenu, PB, XS, lg, DR, openBusMenu, rideBusDestMenu, skipBusTo },
+        X: { get STOPS() { return STOPS; }, get V4() { return V4; }, get V5() { return V5; }, get MIL() { return MIL; }, get MIL_DATA() { return MIL_DATA; }, prefAt, policeName, v5Roadblock, v5Gunshot, v5Crash, get DOGS() { return DOGS; }, get USV() { return USV; }, usvClean, usvBuild, usvRebuild, usvCode, usvParse, usvStart, usvList, usvReach, usvRaw, railGraph, get COASTERS() { return COASTERS; }, WHEELS, nearestStation, v4Interact, v4Prompt, v4DexMenu, v4AchMenu, v4SaveMenu, v4Talk, getSlot, slotKey, v4ApplySave, get SV() { return SV; }, TS, tsPrefetch, newCar, physCar, surfaceAt, edgePos, edgeY, roadsNear, get CT() { return CT; }, departMenu, MM2, svNextTrain, skipToDest, rideDestMenu, PB, XS, lg, DR, openBusMenu, rideBusDestMenu, skipBusTo },
         LM: LM,
         FIRE: FIRE,
         WP: WP,
@@ -28314,15 +28335,18 @@ function svUpcoming(sv, back, st, max = 7) {
   return out;
 }
 function departMenu(S) {
-  const lines = S.lines.filter((L) => L.st.svc && L.st.svc.length);
+  const lines = S.lines.filter((L) => L.st.svc && L.st.svc.some((sv) => !sv.dead && (!sv.user || usvActive(sv))));
+  // v5.0: build your own service from here (鉄道路線作成モード)
+  const mkRow = { label: '＋ 運行をつくる', sub: 'この駅を始発に、自分だけの運行系統をつくる', color: '#ffd23f', buttons: [{ text: 'つくる', fn: () => usvStart(S) }, { text: '一覧', fn: () => usvList(S) }] };
   if (!lines.length) {
-    toast('この駅には列車が来ません');
+    listMenu(`${S.ja}駅`, [{ label: 'この駅には列車が来ません', sub: '自分で運行をつくることはできます', color: '#666', buttons: [] }, mkRow], '改札を出る');
     return;
   }
   const rowsFor = (L) => {
     const rows = [];
     for (const sv of L.st.svc)
       for (const back of [!1, !0]) {
+        if (sv.dead || (sv.user && !usvActive(sv))) continue;
         const k = svStopIdx(sv, back, L.st);
         if (k < 0 || (!sv.loop && k >= sv.stops.length - 1)) continue;
         const [tr, eta] = svNextTrain(sv, back, L.st);
@@ -28352,13 +28376,13 @@ function departMenu(S) {
             { text: '運転', fn: () => MM2(sv, back, L.st, !0, null) },
           ],
         };
-      }),
+      }).concat([mkRow]),
       lines.length > 1 ? '路線を選び直す' : '改札を出る',
       lines.length > 1 ? () => setTimeout(level1, 0) : null,
     );
   };
   const level1 = () => {
-    if (lines.length === 1) return level2(lines[0]);
+    if (lines.length === 1 && S.lines.length === 1) return level2(lines[0]);
     listMenu(
       `${S.ja}駅  ${S.en || ''}`,
       lines.map((L) => {
@@ -28369,7 +28393,7 @@ function departMenu(S) {
           color: J0(L.rail.color),
           buttons: [{ text: '発車案内', fn: () => level2(L) }],
         };
-      }),
+      }).concat([mkRow]),
       '改札を出る',
     );
   };
@@ -29386,7 +29410,7 @@ function e7() {
         player_crime(e.amt, e.why, e.minor);
         break;
       case 'crash':
-        (Ro(e.x, e.y, e.z, e.p), gt.crash(e.p), (G.cam.shake = Math.max(G.cam.shake, Math.min(0.8, e.p * 0.05))));
+        (Ro(e.x, e.y, e.z, e.p), gt.crash(e.p), (G.cam.shake = Math.max(G.cam.shake, Math.min(0.8, e.p * 0.05))), v5Crash(e.x, e.z, e.p));
         break;
       case 'explode':
         (blowUp(e.x, e.y, e.z, e.big, e.byPlayer), explosionFire(e.x, e.z));
@@ -29622,6 +29646,7 @@ function SM(n, t = !0) {
   if (
     ((e.rev = !!(KEYS.KeyR || (TOUCH.btn.x && P.mode === 'train'))),
     G.dying && ((e.mx = e.my = e.thr = e.steer = 0), (e.brake = 1), (G.dying.t -= n), G.dying.t <= 0 && n7()),
+    V5.arrest && ((e.mx = e.my = e.thr = e.steer = 0), (e.brake = 1), (e.fireHeld = e.firePressed = !1)),
     Sn('Escape') && (GT.phone || GT.wheel))
   )
     (togglePhone(!1), toggleWheel(!1));
@@ -29717,6 +29742,7 @@ function SM(n, t = !0) {
     updJob(n),
     updCapsules(),
     v4Tick(n),
+    v5Tick(n),
     updGTA(n),
     (vM -= n),
     vM <= 0 && ((vM = 0.5), updFronts(s, o), updStops(s, o)),
