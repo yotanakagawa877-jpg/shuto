@@ -31,10 +31,11 @@ await page.selectOption('#v5type', '快速').catch(() => {});
 await shot('05_rail_creator');
 await page.locator('#v5ov .v5f button', { hasText: '保存' }).tap().catch(() => {});
 await W8(1500);
-const lines = await page.$$eval('#stmenu .row button', (b) => b.length).catch(() => 0);
-await page.locator('#stmenu .row button', { hasText: '発車案内' }).first().tap().catch(() => {});
+// the departure board of the line the new service starts on
+const rj = await ev(() => { const sv = __G.X.USV.list[0]; return sv ? sv.L[0].r.ja : ''; });
+await page.locator('#stmenu .row', { hasText: rj }).locator('button', { hasText: '発車案内' }).first().tap().catch(() => {});
 await shot('06_departures');
-await page.locator('#stClose').tap().catch(() => {});
+await ev(() => { document.getElementById('stmenu').hidden = true; const o = document.getElementById('v5ov'); o && (o.hidden = true); });
 // 7 fields (autumn colours depend on the real month), 8 greenhouses / industry, 9 suburb with infill
 await ev(async () => { const g = __G; T.drop(); g.R.tod = 15.5; g.P.interior && g.doAction('exit'); await T.tp(-14200, -41800); for (let i = 0; i < 16; i++) T.sim(0.6); g.G.cam.pitch = 0.35; });
 await shot('07_fields');
@@ -45,5 +46,6 @@ await shot('09_suburb');
 // 10 a police station menu
 await ev(async () => { const g = __G, X = g.X; const S = T.st('大宮'); const f = X.facNearest('po', S.x, S.z, 4000, (n) => !n.endsWith('|k')); if (f) { await T.tp(f.x, f.z, false); g.P.x = f.x + 4; g.P.z = f.z; T.sim(1.2); g.POL.forceStars(2); g.interact(); } });
 await shot('10_facility');
+await ev(() => { const o = document.getElementById('v4ov'); o && (o.hidden = true); });
 console.log('errors', JSON.stringify(log.errors).slice(0, 1500));
 await browser.close();

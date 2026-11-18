@@ -464,7 +464,7 @@ function usvEdit(def, isNew, S) {
 <div class="v5sec">種別・名前</div>
 <div class="v5grid">
 <label>種別<select id="v5type">${typeOpts}</select></label>
-<label>種別（自由入力）<input id="v5typef" maxlength="40" value="${esc5(def.type)}"></label>
+<label>種別（自由入力）<input id="v5typef" maxlength="40" value="${TYPES5.some(([t]) => t === def.type) ? '' : esc5(def.type)}" placeholder="種別で「自由入力」を選ぶ"${TYPES5.some(([t]) => t === def.type) ? ' disabled' : ''}></label>
 <label>種別の色<input id="v5tcol" type="color" value="${def.tcol}"></label>
 <label>列車名・愛称<input id="v5name" maxlength="60" placeholder="例：ひかり号" value="${esc5(def.name)}"></label>
 <label>路線名<input id="v5line" maxlength="60" value="${esc5(def.line)}"></label>
@@ -488,6 +488,14 @@ function usvEdit(def, isNew, S) {
   const u = ov.querySelector('[data-a="undo"]');
   u && (u.onclick = () => (read(), USV.draft.way.pop(), usvEdit(USV.draft, isNew, S)));
   ov.querySelector('#v5all').onchange = () => (read(), usvEdit(USV.draft, isNew, S));
+  ov.querySelector('#v5type').onchange = (e) => {
+    const f = ov.querySelector('#v5typef'), free = e.target.value === '__free';
+    f.disabled = !free;
+    free ? f.focus() : (f.value = '');
+    // a preset type brings its colour
+    const t = TYPES5.find(([n]) => n === e.target.value);
+    t && (ov.querySelector('#v5tcol').value = t[1]);
+  };
   ov.querySelector('#v5veh').onchange = () => {
     read();
     const v = VEH.find((x) => x.k === USV.draft.veh);
